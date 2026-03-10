@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Apply Activities – Modules 4, 5 &amp; 6</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <img class="logo" src="{{ url_for('static', filename='devops-logo.png') }}" alt="DevOps logo">
+    <div class="banner-text">Apply &amp; Prove Activities</div>
+    <div class="nav"><a href="/">Home</a> · <a href="/apply">Apply Activities</a></div>
+  </div>
+</header>
+<main class="prose">
+<section>
+  <h2>Apply Activity – CI Pipeline (Module 4)</h2>
+  <p>As a DevOps Engineer, you will have had opportunities in the past few weeks (and/or will have opportunities in the next couple of weeks) to interact with DevOps-related projects in your organisation.
+  You may have had the opportunity to apply your knowledge and understanding gained from your online and classroom learning to solve a problem. This may have been in the form of completing research on DevOps pipelines and key tools, writing programs to put through a pipeline, or undertaking network design activities.</p>
+  <p>In this apply activity, you will document your understanding of how to contribute towards a CI pipeline. In module five you will document how you automate the creation of a virtual environment in the cloud to deploy an application through Infrastructure as Code (IaC). in module six you will then create a full pipeline that utilises cloud services alongside key DevOps tools.</p>
+  <p>With your team and employer you should discuss a unified project or appropriate piece of work that will enable you to address the objectives of the apply activities for this module, plus modules five and six, as mentioned above. This could be a small project or part of a larger one, an existing project or something brand new. Whatever you choose, it should be something you can complete within the timescale allowed for these Apply &amp; Prove activities
+  It must also have a real business function; a simulated task doesn’t count.</p>
+  <p>As you work on the project, you will gather evidence of your input, which will form the submission at the end of the activities. Any work you share with us should be your own. It should also be up to a standard agreed with your employer.
+  Your output will be used as part of your final portfolio as evidence.
+  An Apply &amp; Prove activity allows you demonstrate competence (skills and behaviours) which form a part of your portfolio.</p>
+  <h3>In this activity, you will:</h3>
+  <ol>
+    <li>Create a CI pipeline hosted on the cloud that utilises the tools within your business. This pipeline should be used to build either a legacy application or new applications through. The pipeline should poll from a repository and subsequently build/test, as well as deploying into a container.</li>
+    <li>Document the project context as well as the design of your application and pipeline, and your project will be pushed to an appropriate repository.</li>
+  </ol>
+  <p><strong>You should include an introduction which:</strong></p>
+  <ul>
+    <li>Explains the context of the project you are working on</li>
+    <li>Be written in the first person, clearly stating your own personal input</li>
+  </ul>
+  <h3>Before you start...</h3>
+  <p>Take your time and think what is being asked of you. Break down the work you need to complete and plan how you will accomplish each area.
+  Whilst you need to be detailed, you should only provide the necessary detail, e.g. you don’t need to provide a detailed history of your company or detail every single research finding/source you used.</p>
+  <h3>Building your application</h3>
+  <p>You will need to show that you can:</p>
+  <ul>
+    <li>Configure a Linux machine in the cloud</li>
+    <li>Push your code to a SCM repository, with appropriate branching strategy</li>
+    <li>Then build a project based on the code in your repository</li>
+    <li>Create a pipeline through a declarative language</li>
+    <li>Automate configuration and other parts of the pipeline through scripts</li>
+    <li>Deploy an application into a Docker container</li>
+    <li>Write an appropriate Dockerfile for the application and its dependencies</li>
+    <li>Monitor and log issues within the pipeline</li>
+    <li>Create/update pods and resources</li>
+  </ul>
+  <p>You will need to install and configure an SCM and build server for this, which is consistent with the tooling and set up of the pipeline evidenced in the previous module.</p>
+  <h3>Please evidence the below:</h3>
+  <h4>1. Linux</h4>
+  <ul>
+    <li>Installed/removed/updated software on a Linux machine</li>
+    <li>Configured the package manner to use additional repositories</li>
+    <li>Worked with the command line to achieve one or several different goals</li>
+    <li>Inspected user and file permissions, and subsequently adjusted them where required</li>
+    <li>Worked with command-line text editor: nano, vim, vi, emacs</li>
+    <li>Added/removed/changed configuration files</li>
+    <li>Stopped/started/restarted services</li>
+  </ul>
+  <h4>2. Jenkins/build tool</h4>
+  <ul>
+    <li>Created a pipeline</li>
+    <li>Connected a build tool to a SCM platform and auto-poll</li>
+    <li>Ran a build job</li>
+    <li>Created a declarative pipeline</li>
+    <li>Automated a job using a build tool</li>
+  </ul>
+  <h4>3. Docker</h4>
+  <ul>
+    <li>Created a Docker image</li>
+    <li>Pushed an image to an image repository</li>
+    <li>Pulled an image from an image repository</li>
+    <li>Ran a Docker container</li>
+    <li>Maintained Docker images</li>
+    <li>Converted a legacy application/new app to a Docker image</li>
+  </ul>
+  <h4>4. Kubernetes</h4>
+  <ul>
+    <li>Created a pod/ReplicaSet/deployment</li>
+    <li>Deployed a Kubernetes resource</li>
+    <li>Deleted a Kubernetes resource</li>
+    <li>Updated a pod/ReplicaSet/deployment or other Kubernetes resources</li>
+    <li>Troubleshooted issues with a Kubernetes resource (i.e. a pod isn't starting, how was it diagnosed or resolved)</li>
+  </ul>
+  <p class="note">We understand that you may be working in sensitive or restrictive environments that you cannot share. In cases like this, you can anonymise anything you complete.</p>
+</section>
+
+<section>
+  <h2>Apply Activity – Immutable Infrastructure (Module 5)</h2>
+  <p>As a DevOps engineer, you will now have had opportunities in the last few weeks (and/or will have opportunities in the next couple of weeks) to interact with DevOps-related projects in your organisation.
+  You may have had the opportunity to apply your knowledge and understanding gained from your online and classroom learning to solve a problem. This may have been in the form of completing research and creating DevOps pipelines and key tools, writing programs to put through a pipeline, or undertaking network design activities.</p>
+  <p>It’s time to understand how to create immutable infrastructure in the DevOps space. You should discuss the most appropriate piece of work with your team and employer. This could be a small project or part of a larger one, an existing project or something brand new. Whatever you choose, it should be something you can complete within the timescale allowed for this ‘Apply’ activity.
+  It must also have a real business function. A simulated task doesn’t count.</p>
+  <p>As you work on the project, you will gather evidence of your input, which will form the submission at the end of the activity. Any work you share with us should, of course, be your own. It should also be up to a standard agreed with your employer.
+  Your output will be added to your final portfolio as evidence.
+  An Apply activity allows you demonstrate competence (your skills and behaviours) that will form part of your portfolio.</p>
+  <h3>In this activity, you will:</h3>
+  <p>You will be automating the creation of a virtual environment in the cloud to deploy an application through Infrastructure as Code (IaC), configuration management and other DevOps tooling. You can use the pipeline created in module four as a base for this activity, and further build out its functionality through the aforementioned tools.</p>
+  <p>As mentioned previously, the pipeline should be hosted on the cloud and needs to utilise the tools within your business. This pipeline should be used to build either a legacy application or new applications through. The pipeline should poll from a repository and subsequently build/test, as well as deploy into a container. You will document the project context as well as the design of your application and pipeline, and your project will be pushed to an appropriate repository.</p>
+  <p><strong>You should include an introduction which should:</strong></p>
+  <ul>
+    <li>Explain the context of the project you are working on</li>
+    <li>Be written in the first person, clearly stating your personal input</li>
+  </ul>
+  <h3>Before you start…</h3>
+  <p>Take your time and think what is being asked of you. Break down the work you need to complete and plan how you will accomplish each area.
+  While you need to be detailed, you should only provide the necessary detail, e.g. you don’t need to provide the detailed history of your company or detail every single research finding / source you used.</p>
+  <h3>Please evidence the below:</h3>
+  <h4>Building your application</h4>
+  <ul>
+    <li>Automate the installation and configuration of safe and immutable cloud infrastructure through IaC and configuration management tooling</li>
+    <li>Install, configure and monitor a machine through a monitoring tool of your choice – this will require research into an applicable tool to put within your pipeline</li>
+    <li>Configure a Linux machine in the cloud through IaC and configuration management tools</li>
+    <li>Build a project through an automated pipeline that is built in a declarative language</li>
+    <li>Subsequently build an artefact for an app that can be deployed into a Docker container</li>
+    <li>Deploy the Docker container on the automated infrastructure</li>
+    <li>Monitor and log issues within the pipeline</li>
+    <li>Create/update pods and resources</li>
+  </ul>
+  <h4>Configuration management (example: Ansible)</h4>
+  <ul>
+    <li>Created / updated a configuration file (e.g. an Ansible playbook)</li>
+    <li>Created / updated a role</li>
+    <li>Installed / removed / updated software on a Linux/Windows machine using the configuration management tool</li>
+    <li>Worked with static and/or dynamic data</li>
+    <li>Developed and maintained roles</li>
+    <li>Demonstrated how to secure / manage secrets with the configuration management tool</li>
+  </ul>
+  <h4>Cloud provider and IaC (example: Terraform)</h4>
+  <ul>
+    <li>Created / updated / maintained / deleted resources from a cloud vendor with an IaC tool</li>
+    <li>Created / updated / maintained / used Terraform modules</li>
+    <li>Showed how you have used Terraform within a team (emphasis on state management and how issues were circumvented i.e. state locking with multiple engineers working with a certain environment)</li>
+    <li>Deployed and destroyed environments using Terraform (this may be company specific)</li>
+    <li>Automated with CI/CD solution such as Jenkins</li>
+    <li>Modularised existing Terraform code where possible</li>
+    <li>Demonstrated how to secure manage secrets with Terraform</li>
+    <li>Demonstrated how you’ve used data sources in the workplace</li>
+    <li>Worked with Terraform for multiple environments (focus on state file management and variable files)</li>
+    <li>Migrated and imported current AWS infrastructure to Terraform (this may be company specific)</li>
+  </ul>
+  <h4>Linux</h4>
+  <ul>
+    <li>Installed / removed / updated software on a Linux machine</li>
+    <li>Configured the package manager to use additional repositories</li>
+    <li>Worked with the command line to achieve one or several different goals</li>
+    <li>Inspected user and file permissions, and subsequently adjusted them where required</li>
+    <li>Worked with command-line text editors: nano, vim, vi, emacs</li>
+    <li>Added / removed / changed configuration files</li>
+    <li>Stopped / started / restarted services</li>
+  </ul>
+  <h4>Jenkins/build tool</h4>
+  <ul>
+    <li>Created a pipeline</li>
+    <li>Connected a build tool to a SCM platform and auto-poll</li>
+    <li>Ran a build job</li>
+    <li>Created a declarative pipeline</li>
+    <li>Automated a job using a build tool</li>
+  </ul>
+  <h4>Docker</h4>
+  <ul>
+    <li>Created a Docker image</li>
+    <li>Pushed an image to an image repository</li>
+    <li>Pulled an image from an image repository</li>
+    <li>Ran a Docker container</li>
+    <li>Maintained Docker images</li>
+    <li>Converted a legacy application/new app to a Docker Image</li>
+  </ul>
+  <h4>Kubernetes</h4>
+  <ul>
+    <li>Created a pod / ReplicaSet / deployment</li>
+    <li>Deployed a Kubernetes resource</li>
+    <li>Deleted a Kubernetes resource</li>
+    <li>Updated a pod/ReplicaSet/deployment/service or other Kubernetes resource</li>
+    <li>Troubleshooted an issue with the Kubernetes resource (i.e. a pod is not starting, how was it diagnosed and resolved)</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Apply Activity – Cloud Services + Full Pipeline (Module 6)</h2>
+  <p>As a DevOps Engineer, you have now interacted with all areas of a pipeline and some of the key tools that are used to facilitate a DevOps culture within a business.
+  You may have had the opportunity to apply your knowledge and understanding gained from your online and classroom learning to solve a problem. This may have been in the form of completing research and creating DevOps pipelines and key tools, writing programs to put through a pipeline, or undertaking network design activities.</p>
+  <p>It’s time to create a full pipeline that utilises cloud services alongside key DevOps tools. You should discuss the most appropriate piece of work with your team and employer. This could be a small project or part of a larger one, an existing project or something brand new; but whatever you choose, it should be something you can complete within the timescale allowed for this Apply activity.
+  It must also have a real business function; a simulated task doesn’t count.</p>
+  <p>As you work on the project, you will gather evidence of your input, which will form the submission at the end of the activity. Any work you share with us should, of course, be your own. It should also be up to a standard agreed with your employer. Your output will be added to your final portfolio as evidence.
+  An Apply activity allows you demonstrate competence (skills and behaviours) which will form a part of your portfolio. This is real work you have done in your workplace that is unique to you and your employer.</p>
+  <p><em>Note: Before you start working on this activity, you will need to submit a plan which will be explained in the upcoming step.</em></p>
+  <h3>In this activity you will:</h3>
+  <p>You will be automating the creation of a full DevOps pipeline that can build, containerise and deploy an application through a combination of a cloud vendor’s services and independent DevOps tools. You can use the pipeline designed in module 5 as a base for this activity to then transition over to an architected cloud-based solution.</p>
+  <p>As mentioned previously, the pipeline should be hosted on the cloud and needs to utilise the tools within your business. This pipeline should be used to build either a legacy application or new applications through. The pipeline should poll from a repository and subsequently build/test, as well as deploying into a container. You will document the project context as well as the design of your application and pipeline, and your project will be pushed to an appropriate repository.</p>
+  <p><strong>You should include an introduction which:</strong></p>
+  <ul>
+    <li>Explains the context of the project you are working on</li>
+    <li>Is written in the first person, clearly stating your own, personal input</li>
+  </ul>
+  <h3>Before you start…</h3>
+  <p>Take your time and think what is being asked of you. Break down the work you need to complete and plan how you will accomplish each area.
+  Whilst you need to be detailed, you should only provide the necessary detail (e.g.: You don’t need to provide the detailed history of your company or detail every single research finding/source you used.)</p>
+  <h3>Building your application</h3>
+  <p>You will need to show that you can:</p>
+  <ul>
+    <li>Manage source code and build application through pipelines/build jobs with the use of a cloud vendor (i.e.: the cloud vendor’s service rather than a 3rd party tool.)</li>
+    <li>Automate the installation and configuration of safe and immutable cloud infrastructure through IaC and Configuration Management – this should be done through an independent tool (such as Terraform &amp; Ansible)</li>
+    <li>Containerisation and orchestration – this should be done through an independent tool (such as Docker &amp; Kubernetes)</li>
+    <li>Build and deploy multiple projects through the pipeline</li>
+  </ul>
+  <h3>Please evidence the below:</h3>
+  <h4>Cloud Services</h4>
+  <ul>
+    <li>Designed architecture of the pipeline</li>
+    <li>Storage, access management, networking and security configuration</li>
+    <li>Monitoring configuration</li>
+    <li>Source code management, application build management, pipeline creation, deploying of an application</li>
+    <li>Use of APIs through cloud service</li>
+    <li>Virtual machine creation (automation of creation)</li>
+  </ul>
+  <h4>Configuration Management (example: Ansible)</h4>
+  <ul>
+    <li>Created / Updated a configuration file (e.g.: an Ansible playbook)</li>
+    <li>Created / Updated a Role</li>
+    <li>Installed / Removed / Updated software on a Linux/Windows machine using the configuration management tool</li>
+    <li>Worked with Static and/or Dynamic data</li>
+    <li>Developed and Maintained Roles</li>
+    <li>Demonstrate how to secure manage secrets with the configuration management tool</li>
+  </ul>
+  <h4>Cloud Provider and IaC (example: Terraform)</h4>
+  <ul>
+    <li>Create / Update / Maintain / Delete resources from a cloud vendor with an IaC tool</li>
+    <li>Create / Update / Maintain / Use Terraform Modules</li>
+    <li>Show how you have used Terraform within a team (emphasis on state management and how issues were circumvented; i.e.: state locking with multiple engineers working with a certain environment)</li>
+    <li>(May be company specific) deploy and destroy environments using Terraform</li>
+    <li>Automate with CI/CD solution such as Jenkins</li>
+    <li>Modularise existing Terraform code where possible</li>
+    <li>Demonstrate how to secure manage secrets with Terraform</li>
+    <li>Demonstrate how you’ve used Data Sources in the workplace</li>
+    <li>Working with Terraform for multiple environments (focus on state file management and variable files)</li>
+    <li>(May be company specific) migrate and import current AWS infrastructure to Terraform</li>
+  </ul>
+  <h4>Docker</h4>
+  <ul>
+    <li>Create a Docker Image</li>
+    <li>Push an image to an image repository</li>
+    <li>Pull an image from an image repository</li>
+    <li>Run a Docker container</li>
+    <li>Maintain Docker images</li>
+    <li>Convert a legacy application/new app to a Docker Image</li>
+  </ul>
+  <h4>Kubernetes</h4>
+  <ul>
+    <li>Create a Pod / ReplicaSet / Deployment</li>
+    <li>Deploy a Kubernetes Resource</li>
+    <li>Delete a Kubernetes Resource</li>
+    <li>Update a Pod / ReplicaSet / Deployment / Service or other Kubernetes Resource</li>
+    <li>Troubleshoot issue with Kubernetes resource (i.e. pod not starting, how was it diagnosed and resolved)</li>
+  </ul>
+  <p class="note">We understand you may be working in sensitive or restrictive environments that you cannot share. In cases like this, you can anonymise anything you complete.</p>
+</section>
+
+</main>
+<div class="footer-banner">DevOps Forever</div>
+</body>
+</html>
