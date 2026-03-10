@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Vince Falconer Level 4 DevOps Engineer</title>
+  <style>
+    body { background-color: black; color: white; font-family: Arial, sans-serif; text-align: center; padding-top: 40px; transition: background-color 0.5s ease; margin: 0; }
+    .banner { font-size: 32px; font-weight: bold; margin: 12px 0 24px; }
+    img.logo { width: 350px; margin-bottom: 10px; }
+    button { padding: 12px 24px; font-size: 18px; cursor: pointer; border: none; border-radius: 5px; }
+    a { color: #00ff88; }
+  </style>
+</head>
+<body>
+  <img class="logo" src="devops-logo.png" alt="DevOps logo">
+  <div class="banner">Vince Falconer Level 4 DevOps Engineer</div>
+  <p><a href="index_apply.html">Read the Apply Activities brief</a></p>
+  <button onclick="changeColour()">Change Background Colour</button>
+  <script>
+    function changeColour(){ const colours=["#1abc9c","#3498db","#9b59b6","#e67e22","#c0392b","#2ecc71","#2c3e50"]; document.body.style.backgroundColor = colours[Math.floor(Math.random()*colours.length)]; }
+  </script>
+</body>
+</html>
