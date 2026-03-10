@@ -1,0 +1,17 @@
+image:
+  repository: REPLACE_ACR.azurecr.io/starterkit
+  tag: latest
+  pullPolicy: IfNotPresent
+service:
+  type: ClusterIP
+  port: 80
+ingress:
+  enabled: false
+  className: ""
+  hosts:
+    - host: myapp.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+resources: {}
+replicaCount: 1

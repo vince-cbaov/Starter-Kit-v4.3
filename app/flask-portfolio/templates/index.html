@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Vince Falconer – Portfolio</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <img class="logo" src="{{ url_for('static', filename='devops-logo.png') }}" alt="DevOps logo">
+    <div class="banner-text">Vince Falconer – Level 4 DevOps Engineer</div>
+    <div class="tagline">DevOps | Azure | Kubernetes | Terraform | CI/CD</div>
+    <div class="nav"><a href="/">Home</a> · <a href="/apply">Apply Activities</a></div>
+    <button class="change-btn" onclick="changeColour()">Change Background Colour</button>
+  </div>
+</header>
+<main>
+  <section class="section">
+    <h2>About Me</h2>
+    <p>I am a Level 4 DevOps Engineer with hands-on experience in CI/CD pipelines, containerisation, infrastructure as code, and cloud platforms. I focus on reliability, automation, and measurable delivery.</p>
+  </section>
+  <section class="section">
+    <h2>Skills</h2>
+    <div class="skills">
+      <div class="skill">Azure &amp; AKS</div>
+      <div class="skill">Kubernetes</div>
+      <div class="skill">Docker</div>
+      <div class="skill">Terraform</div>
+      <div class="skill">Jenkins &amp; GitHub Actions</div>
+      <div class="skill">Helm</div>
+      <div class="skill">Linux</div>
+      <div class="skill">Snyk &amp; Security Scanning</div>
+    </div>
+  </section>
+  <section class="section">
+    <h2>Projects</h2>
+    <div class="projects">
+      <div class="card">
+        <h3>CI/CD Pipeline</h3>
+        <p>End-to-end pipeline using GitHub Actions, Jenkins, and Helm to deploy a Flask app to Azure.</p>
+      </div>
+      <div class="card">
+        <h3>AKS Infrastructure</h3>
+        <p>AKS cluster provisioned with Terraform, secured with Azure OIDC and Key Vault secrets.</p>
+      </div>
+      <div class="card">
+        <h3>Container Hardening</h3>
+        <p>Hardened Docker images with vulnerability scanning via Snyk and best-practice base images.</p>
+      </div>
+    </div>
+  </section>
+  <section class="section">
+    <h2>Contact</h2>
+    <p>Reach out for collaborations or opportunities.</p>
+    <a class="button" href="mailto:example@example.com">Email Me</a>
+  </section>
+</main>
+<div class="footer-banner">DevOps Forever</div>
+<script>
+  function changeColour(){ const colours=["#1abc9c","#3498db","#9b59b6","#e67e22","#c0392b","#2ecc71","#2c3e50"]; document.body.style.backgroundColor = colours[Math.floor(Math.random()*colours.length)]; }
+</script>
+</body>
+</html>
