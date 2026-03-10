@@ -1,0 +1,9 @@
+---
+- name: Install fail2ban
+  apt: name=fail2ban state=present
+
+- name: Configure UFW
+  ufw: rule=allow port=22 proto=tcp
+
+- name: Enable UFW
+  ufw: state=enabled

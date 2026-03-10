@@ -1,0 +1,19 @@
+---
+- name: Install dependencies
+  apt: name={{ item }} state=present update_cache=yes
+  loop:
+    - openjdk-17-jdk
+    - git
+
+- name: Install Jenkins repo key
+  apt_key: url=https://pkg.jenkins.io/debian-stable/jenkins.io.key state=present
+
+- name: Add Jenkins repo
+  apt_repository:
+    repo: 'deb https://pkg.jenkins.io/debian-stable binary/'
+
+- name: Install Jenkins
+  apt: name=jenkins state=present update_cache=yes
+
+- name: Ensure Jenkins running
+  service: name=jenkins state=started enabled=yes
