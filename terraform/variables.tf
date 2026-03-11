@@ -40,3 +40,8 @@ variable "enable_docker_vm" {
   type    = bool
   default = true
 }
+
+variable "sp_object_id" {
+  description = "Object ID of the service principal (principal_id) that runs Terraform"
+  type        = string
+}

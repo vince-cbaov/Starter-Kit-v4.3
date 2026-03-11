@@ -47,14 +47,21 @@ module "kv" {
   location    = module.rg.location
   name_prefix = var.name_prefix
 
-  tenant_id         = var.tenant_id
+  tenant_id   = var.tenant_id
+
+  # RBAC model inputs
+  sp_object_id = var.sp_object_id
+
+  # Seed secrets as a map
   secrets = {
-    "acr-sp-app-id"  = var.sp_app_id
-    "acr-sp-secret"  = var.sp_secret
-    "tenant-id"      = var.tenant_id
-    "acr-name"       = var.acr_name
+    "acr-sp-app-id" = var.sp_app_id
+    "acr-sp-secret" = var.sp_secret
+    "tenant-id"     = var.tenant_id
+    "acr-name"      = var.acr_name
   }
-  access_object_ids = []
+
+  # Deprecated in RBAC model (removed):
+  # access_object_ids = []
 }
 
 module "compute" {
