@@ -1,5 +1,7 @@
 locals {
-  name = var.name_override != "" ? var.name_override : replace("${var.name_prefix}acr", "-", "")
+  name = var.name_override != "" ?
+    var.name_override :
+    replace("${var.name_prefix}acr", "-", "")
 }
 
 resource "azurerm_container_registry" "acr" {
