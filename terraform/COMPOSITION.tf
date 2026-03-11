@@ -46,13 +46,8 @@ module "kv" {
   rg_name     = module.rg.name
   location    = module.rg.location
   name_prefix = var.name_prefix
-
   tenant_id   = var.tenant_id
 
-  # RBAC model inputs
-  sp_object_id = var.sp_object_id
-
-  # Seed secrets as a map
   secrets = {
     "acr-sp-app-id" = var.sp_app_id
     "acr-sp-secret" = var.sp_secret
@@ -60,19 +55,18 @@ module "kv" {
     "acr-name"      = var.acr_name
   }
 
-  # Deprecated in RBAC model (removed):
-  # access_object_ids = []
+  access_object_ids = []
 }
 
 module "compute" {
   source           = "./modules/compute"
   create_vms       = var.create_vms
   enable_docker_vm = var.enable_docker_vm
-
-  rg_name        = module.rg.name
-  location       = module.rg.location
-  name_prefix    = var.name_prefix
-  subnet_id      = module.network.subnet_id
-  admin_username = var.admin_username
-  ssh_public_key = var.ssh_public_key
+  rg_name          = module.rg.name
+  location         = module.rg.location
+  name_prefix      = var.name_prefix
+  subnet_id        = module.network.subnet_id
+  admin_username   = var.admin_username
+  ssh_public_key   = var.ssh_public_key
 }
+``
