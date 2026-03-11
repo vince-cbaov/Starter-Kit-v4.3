@@ -33,7 +33,7 @@ variable "tenant_id" {
 
 variable "create_vms" {
   type    = bool
-  default = false
+  default = true
 }
 
 variable "enable_docker_vm" {
