@@ -29,12 +29,21 @@ resource "azurerm_role_assignment" "kv_secrets_officer" {
 # =========================
 # Seed secrets
 # =========================
+resource "time_sleep" "wait_for_rbac" {
+  depends_on = [azurerm_role_assignment.kv_secrets_officer]
+  create_duration = "20s"
+}
+
 resource "azurerm_key_vault_secret" "seed" {
   for_each     = var.secrets
   name         = each.key
   value        = each.value
   key_vault_id = azurerm_key_vault.kv.id
+  depends_on   = [time_sleep.wait_for_rbac]
+}
 
   # Ensure RBAC assignment exists (prevents 403 race)
   depends_on   = [azurerm_role_assignment.kv_secrets_officer]
 }
+
+
