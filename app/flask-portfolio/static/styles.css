@@ -1,4 +1,7 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 0b58b27ab7c0049cc96e4fa5d46b6d765ceee0e9
 body {
   background-color: black;
   color: white;
@@ -124,6 +127,7 @@ header {
   text-align: center;
 }
 
+<<<<<<< HEAD
 /* Apply page content */
 main.prose {
   max-width: 980px;
@@ -169,3 +173,25 @@ main.prose { max-width: 980px; margin: 0 auto; padding: 24px 16px 80px; text-ali
 main.prose h2, main.prose h3, main.prose h4 { color: #00ff88; }
 .note { background:#101010; border:1px solid #222; padding:12px; border-radius:6px; }
 >>>>>>> origin/main
+=======
+/* Apply page content */
+main.prose {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 24px 16px 80px;
+  text-align: left;
+}
+
+main.prose h2,
+main.prose h3,
+main.prose h4 {
+  color: #00ff88;
+}
+
+.note {
+  background: #101010;
+  border: 1px solid #222;
+  padding: 12px;
+  border-radius: 6px;
+}
+>>>>>>> 0b58b27ab7c0049cc96e4fa5d46b6d765ceee0e9

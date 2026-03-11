@@ -90,5 +90,8 @@ module "compute" {
   admin_username   = var.admin_username
   ssh_public_key   = var.ssh_public_key
 }
+<<<<<<< HEAD
 ``
 >>>>>>> origin/main
+=======
+>>>>>>> 0b58b27ab7c0049cc96e4fa5d46b6d765ceee0e9
