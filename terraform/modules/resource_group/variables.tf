@@ -11,10 +11,10 @@ resource "azurerm_resource_group" "rg" {
   location = var.location
 }
 
-output "name" {
-  value = azurerm_resource_group.rg.name
+variable "name" {
+  type = string
 }
 
-output "location" {
-  value = azurerm_resource_group.rg.location
+variable "location" {
+  type = string
 }
