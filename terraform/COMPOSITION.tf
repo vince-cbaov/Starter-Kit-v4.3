@@ -69,4 +69,3 @@ module "compute" {
   admin_username   = var.admin_username
   ssh_public_key   = var.ssh_public_key
 }
-``
