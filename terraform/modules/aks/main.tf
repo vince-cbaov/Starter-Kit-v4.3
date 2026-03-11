@@ -2,16 +2,8 @@ resource "azurerm_kubernetes_cluster" "aks" {
   name                = "${var.name_prefix}-aks"
   location            = var.location
   resource_group_name = var.rg_name
-<<<<<<< HEAD
-<<<<<<< HEAD
 
   dns_prefix = "${var.name_prefix}-dns"
-=======
-  dns_prefix          = "${var.name_prefix}-dns"
->>>>>>> origin/main
-=======
-  dns_prefix          = "${var.name_prefix}-dns"
->>>>>>> origin/dev
 
   default_node_pool {
     name       = "nodepool1"
@@ -30,12 +22,4 @@ output "name" {
 
 output "kubelet_identity_object_id" {
   value = azurerm_kubernetes_cluster.aks.kubelet_identity[0].object_id
-<<<<<<< HEAD
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/main
-=======
-}
->>>>>>> origin/dev
