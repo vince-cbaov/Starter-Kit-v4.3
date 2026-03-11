@@ -23,3 +23,8 @@ variable "access_object_ids" {
   type    = list(string)
   default = []
 }
+
+variable "sp_object_id" {
+  description = "Object ID of the service principal (principal_id) that runs Terraform"
+  type        = string
+}
