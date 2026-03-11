@@ -46,7 +46,7 @@ module "kv" {
   rg_name     = module.rg.name
   location    = module.rg.location
   name_prefix = var.name_prefix
-
+  sp_object_id = var.sp_object_id
   tenant_id = var.tenant_id
 
   secrets = {
