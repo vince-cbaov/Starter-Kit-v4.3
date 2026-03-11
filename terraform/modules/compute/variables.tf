@@ -54,7 +54,7 @@ variable "name_prefix" {
 
 variable "admin_username" {
   type    = string
-  default = "azureuser"
+  default = "vinadmin"
 }
 
 variable "ssh_public_key" {
