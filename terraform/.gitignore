@@ -1,21 +1,21 @@
 # Terraform directories
 .terraform/
 .terraform.lock.hcl
+terraform.tfvars
+**/.terraform/**
+**/.terraform.lock.hcl
 
 # Terraform state (if you don’t use remote backend)
 *.tfstate
 *.tfstate.backup
-
-# Crash logs
-crash.log
-
-
-**/.terraform/**
-**/.terraform.lock.hcl
 *.tfstate
 *.tfstate.*
+envs/*/*.tfstate
+envs/*/*.tfstate.backup
+# Crash logs
 crash.log
 crash.*.log
+
 override.tf
 override.tf.json
 *_override.tf
