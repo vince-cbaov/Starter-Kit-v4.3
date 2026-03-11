@@ -1,4 +1,3 @@
-
 location         = "northeurope"
 name_prefix      = "sk-prod"
 admin_username   = "vinadmin"
