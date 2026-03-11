@@ -28,13 +28,7 @@ resource "azurerm_network_security_group" "docker_nsg" {
   location            = var.location
   resource_group_name = var.rg_name
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-  # ⚠ Insecure: Docker’s plaintext API on 2375 (see notes below)
-=======
->>>>>>> origin/main
-=======
->>>>>>> origin/dev
+  # ⚠ Insecure: Docker’s plaintext API on 2375
   security_rule {
     name                       = "docker-remote"
     priority                   = 1001
@@ -61,14 +55,7 @@ resource "azurerm_linux_virtual_machine" "docker" {
   resource_group_name = var.rg_name
   size                = "Standard_B2s"
   admin_username      = var.admin_username
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
 
->>>>>>> origin/main
-=======
-
->>>>>>> origin/dev
   network_interface_ids = [
     azurerm_network_interface.docker_nic[0].id
   ]
@@ -85,13 +72,6 @@ resource "azurerm_linux_virtual_machine" "docker" {
     version   = "latest"
   }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-  # Requires a non-empty SSH key; see validation suggestions below
-=======
->>>>>>> origin/main
-=======
->>>>>>> origin/dev
   admin_ssh_key {
     username   = var.admin_username
     public_key = var.ssh_public_key
@@ -101,11 +81,6 @@ resource "azurerm_linux_virtual_machine" "docker" {
 output "docker_public_ip" {
   value = try(azurerm_public_ip.docker_pip[0].ip_address, null)
 }
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-=======
->>>>>>> origin/dev
 
 # ---------------------------
 # Jenkins VM (optional)
@@ -148,7 +123,7 @@ resource "azurerm_network_security_group" "jenkins_nsg" {
     protocol                   = "Tcp"
     source_port_range          = "*"
     destination_port_range     = "22"
-    source_address_prefixes    = ["*"] # TIP: lock this down to your IP
+    source_address_prefixes    = ["*"] 
     destination_address_prefix = "*"
   }
 
@@ -161,7 +136,7 @@ resource "azurerm_network_security_group" "jenkins_nsg" {
     protocol                   = "Tcp"
     source_port_range          = "*"
     destination_port_range     = "8080"
-    source_address_prefixes    = ["*"] # TIP: lock this down to your IP or use an ALB/AppGW
+    source_address_prefixes    = ["*"]
     destination_address_prefix = "*"
   }
 }
@@ -205,7 +180,3 @@ resource "azurerm_linux_virtual_machine" "jenkins" {
 output "jenkins_public_ip" {
   value = try(azurerm_public_ip.jenkins_pip[0].ip_address, null)
 }
-<<<<<<< HEAD
->>>>>>> origin/main
-=======
->>>>>>> origin/dev
