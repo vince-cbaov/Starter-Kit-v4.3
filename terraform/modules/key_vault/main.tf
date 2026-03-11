@@ -4,6 +4,7 @@ resource "azurerm_key_vault" "kv" {
   resource_group_name        = var.rg_name
   tenant_id                  = var.tenant_id
   sku_name                   = "standard"
+<<<<<<< HEAD
 
   # Retention / protection
   soft_delete_retention_days = 7
@@ -17,16 +18,35 @@ resource "azurerm_key_vault" "kv" {
 # Access policies model (use ONLY if enable_rbac_authorization=false or omitted)
 resource "azurerm_key_vault_access_policy" "access" {
   for_each     = toset(var.access_object_ids)
+=======
+  purge_protection_enabled   = true
+  soft_delete_retention_days = 7
+}
+
+resource "azurerm_key_vault_access_policy" "access" {
+  for_each = toset(var.access_object_ids)
+
+>>>>>>> origin/main
   key_vault_id = azurerm_key_vault.kv.id
   tenant_id    = var.tenant_id
   object_id    = each.value
 
   secret_permissions = [
+<<<<<<< HEAD
     "Get", "List", "Set", "Delete", "Purge", "Recover"
+=======
+    "Get",
+    "List",
+    "Set",
+    "Delete",
+    "Purge",
+    "Recover",
+>>>>>>> origin/main
   ]
 }
 
 resource "azurerm_key_vault_secret" "seed" {
+<<<<<<< HEAD
   for_each    = var.secrets
   name        = each.key
   value       = each.value
@@ -35,6 +55,13 @@ resource "azurerm_key_vault_secret" "seed" {
   # optional:
   # content_type = "text/plain"
   # tags         = { source = "terraform" }
+=======
+  for_each = var.secrets
+
+  name          = each.key
+  value         = each.value
+  key_vault_id  = azurerm_key_vault.kv.id
+>>>>>>> origin/main
 }
 
 output "kv_name" {

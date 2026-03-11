@@ -46,6 +46,7 @@ module "kv" {
   rg_name     = module.rg.name
   location    = module.rg.location
   name_prefix = var.name_prefix
+<<<<<<< HEAD
 
   tenant_id         = var.tenant_id
   secrets = {
@@ -54,6 +55,17 @@ module "kv" {
     "tenant-id"      = var.tenant_id
     "acr-name"       = var.acr_name
   }
+=======
+  tenant_id   = var.tenant_id
+
+  secrets = {
+    "acr-sp-app-id" = var.sp_app_id
+    "acr-sp-secret" = var.sp_secret
+    "tenant-id"     = var.tenant_id
+    "acr-name"      = var.acr_name
+  }
+
+>>>>>>> origin/main
   access_object_ids = []
 }
 
@@ -61,6 +73,7 @@ module "compute" {
   source           = "./modules/compute"
   create_vms       = var.create_vms
   enable_docker_vm = var.enable_docker_vm
+<<<<<<< HEAD
 
   rg_name        = module.rg.name
   location       = module.rg.location
@@ -69,3 +82,13 @@ module "compute" {
   admin_username = var.admin_username
   ssh_public_key = var.ssh_public_key
 }
+=======
+  rg_name          = module.rg.name
+  location         = module.rg.location
+  name_prefix      = var.name_prefix
+  subnet_id        = module.network.subnet_id
+  admin_username   = var.admin_username
+  ssh_public_key   = var.ssh_public_key
+}
+``
+>>>>>>> origin/main
