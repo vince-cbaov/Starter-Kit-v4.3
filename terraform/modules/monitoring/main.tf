@@ -3,6 +3,7 @@ resource "azurerm_log_analytics_workspace" "law" {
   location            = var.location
   resource_group_name = var.rg_name
 <<<<<<< HEAD
+<<<<<<< HEAD
 
   sku                = "PerGB2018"
   retention_in_days  = 30
@@ -10,6 +11,10 @@ resource "azurerm_log_analytics_workspace" "law" {
   sku                 = "PerGB2018"
   retention_in_days   = 30
 >>>>>>> origin/main
+=======
+  sku                 = "PerGB2018"
+  retention_in_days   = 30
+>>>>>>> origin/dev
 }
 
 output "law_id" {

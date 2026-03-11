@@ -1,0 +1,10 @@
+# Terraform directories
+.terraform/
+.terraform.lock.hcl
+
+# Terraform state (if you don’t use remote backend)
+*.tfstate
+*.tfstate.backup
+
+# Crash logs
+crash.log

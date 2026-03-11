@@ -29,9 +29,12 @@ resource "azurerm_network_security_group" "docker_nsg" {
   resource_group_name = var.rg_name
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   # ⚠ Insecure: Docker’s plaintext API on 2375 (see notes below)
 =======
 >>>>>>> origin/main
+=======
+>>>>>>> origin/dev
   security_rule {
     name                       = "docker-remote"
     priority                   = 1001
@@ -59,9 +62,13 @@ resource "azurerm_linux_virtual_machine" "docker" {
   size                = "Standard_B2s"
   admin_username      = var.admin_username
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
 >>>>>>> origin/main
+=======
+
+>>>>>>> origin/dev
   network_interface_ids = [
     azurerm_network_interface.docker_nic[0].id
   ]
@@ -79,9 +86,12 @@ resource "azurerm_linux_virtual_machine" "docker" {
   }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   # Requires a non-empty SSH key; see validation suggestions below
 =======
 >>>>>>> origin/main
+=======
+>>>>>>> origin/dev
   admin_ssh_key {
     username   = var.admin_username
     public_key = var.ssh_public_key
@@ -92,7 +102,10 @@ output "docker_public_ip" {
   value = try(azurerm_public_ip.docker_pip[0].ip_address, null)
 }
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> origin/dev
 
 # ---------------------------
 # Jenkins VM (optional)
@@ -192,4 +205,7 @@ resource "azurerm_linux_virtual_machine" "jenkins" {
 output "jenkins_public_ip" {
   value = try(azurerm_public_ip.jenkins_pip[0].ip_address, null)
 }
+<<<<<<< HEAD
 >>>>>>> origin/main
+=======
+>>>>>>> origin/dev

@@ -1,11 +1,17 @@
 locals {
 <<<<<<< HEAD
+<<<<<<< HEAD
   name = var.name_override != "" ? var.name_override : replace("${var.name_prefix}acr", "-", "")
 =======
   name = var.name_override != "" ?
     var.name_override :
     replace("${var.name_prefix}acr", "-", "")
 >>>>>>> origin/main
+=======
+  name = var.name_override != "" ?
+    var.name_override :
+    replace("${var.name_prefix}acr", "-", "")
+>>>>>>> origin/dev
 }
 
 resource "azurerm_container_registry" "acr" {

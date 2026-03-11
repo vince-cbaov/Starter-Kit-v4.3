@@ -2,6 +2,10 @@ output "kv_name" {
   value = module.kv.kv_name
 }
 
+output "kv_uri" {
+  value = module.kv.kv_uri
+}
+
 output "acr_name" {
   value = module.acr.name
 }

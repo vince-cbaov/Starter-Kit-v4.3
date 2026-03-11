@@ -29,8 +29,11 @@ variable "admin_username" {
 variable "ssh_public_key" {
   type = string
 <<<<<<< HEAD
+<<<<<<< HEAD
 }
 =======
+=======
+>>>>>>> origin/dev
 }
 
 variable "create_vms" {
@@ -63,4 +66,7 @@ variable "admin_username" {
 variable "ssh_public_key" {
   type = string
 }
+<<<<<<< HEAD
 >>>>>>> origin/main
+=======
+>>>>>>> origin/dev
