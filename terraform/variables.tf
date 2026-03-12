@@ -23,21 +23,6 @@ variable "acr_name" {
   default = "starterkitacr"
 }
 
-variable "sp_app_id" {
-  type    = string
-  default = "<PUT-YOUR-SP-APP-ID-HERE>"
-}
-
-variable "sp_secret" {
-  type    = string
-  default = "<PUT-YOUR-SP-SECRET-HERE>"
-}
-
-variable "tenant_id" {
-  type    = string
-  default = "<PUT-YOUR-TENANT-ID-HERE>"
-}
-
 variable "create_vms" {
   type    = bool
   default = true
@@ -46,10 +31,4 @@ variable "create_vms" {
 variable "enable_docker_vm" {
   type    = bool
   default = true
-}
-
-variable "sp_object_id" {
-  type        = string
-  description = "Object ID of the service principal"
-  default     = "<PUT-YOUR-SP-OBJECT-ID-HERE>"
 }
