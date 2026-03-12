@@ -28,11 +28,11 @@ module "monitoring" {
 }
 
 module "aks" {
-  source        = "./modules/aks"
-  rg_name       = module.rg.name
-  location      = module.rg.location
-  name_prefix   = var.name_prefix
-  node_vm_size  = "Standard_DS2_v2"
+  source       = "./modules/aks"
+  rg_name      = module.rg.name
+  location     = module.rg.location
+  name_prefix  = var.name_prefix
+  node_vm_size = "Standard_DS2_v2"
 }
 
 resource "azurerm_role_assignment" "aks_acr_pull" {
@@ -42,12 +42,12 @@ resource "azurerm_role_assignment" "aks_acr_pull" {
 }
 
 module "kv" {
-  source      = "./modules/key_vault"
-  rg_name     = module.rg.name
-  location    = module.rg.location
-  name_prefix = var.name_prefix
+  source       = "./modules/key_vault"
+  rg_name      = module.rg.name
+  location     = module.rg.location
+  name_prefix  = var.name_prefix
   sp_object_id = var.sp_object_id
-  tenant_id = var.tenant_id
+  tenant_id    = var.tenant_id
 
   secrets = {
     "acr-sp-app-id" = var.sp_app_id
