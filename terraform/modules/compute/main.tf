@@ -37,7 +37,7 @@ resource "azurerm_network_security_group" "docker_nsg" {
     protocol                   = "Tcp"
     source_port_range          = "*"
     destination_port_range     = "2375"
-    source_address_prefixes    = ["*"]
+    source_address_prefixes    = "Internet"   # or "0.0.0.0/0"
     destination_address_prefix = "*"
   }
 }
@@ -123,7 +123,7 @@ resource "azurerm_network_security_group" "jenkins_nsg" {
     protocol                   = "Tcp"
     source_port_range          = "*"
     destination_port_range     = "22"
-    source_address_prefixes    = ["*"] 
+    source_address_prefixes    = "Internet"   # or "0.0.0.0/0"
     destination_address_prefix = "*"
   }
 
@@ -136,7 +136,7 @@ resource "azurerm_network_security_group" "jenkins_nsg" {
     protocol                   = "Tcp"
     source_port_range          = "*"
     destination_port_range     = "8080"
-    source_address_prefixes    = ["*"]
+    source_address_prefixes    = "Internet"   # or "0.0.0.0/0"
     destination_address_prefix = "*"
   }
 }
