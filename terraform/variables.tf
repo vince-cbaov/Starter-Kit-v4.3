@@ -1,13 +1,16 @@
 variable "location" {
-  type = string
+  type    = string
+  default = "northeurope"
 }
 
 variable "name_prefix" {
-  type = string
+  type    = string
+  default = "sk-dev"
 }
 
 variable "admin_username" {
-  type = string
+  type    = string
+  default = "vinadmin"
 }
 
 variable "ssh_public_key" {
@@ -16,24 +19,28 @@ variable "ssh_public_key" {
 }
 
 variable "acr_name" {
-  type = string
+  type    = string
+  default = "starterkitacr"
 }
 
 variable "sp_app_id" {
-  type = string
+  type    = string
+  default = "<PUT-YOUR-SP-APP-ID-HERE>"
 }
 
 variable "sp_secret" {
-  type = string
+  type    = string
+  default = "<PUT-YOUR-SP-SECRET-HERE>"
 }
 
 variable "tenant_id" {
-  type = string
+  type    = string
+  default = "<PUT-YOUR-TENANT-ID-HERE>"
 }
 
 variable "create_vms" {
   type    = bool
-  default = false
+  default = true
 }
 
 variable "enable_docker_vm" {
@@ -42,6 +49,7 @@ variable "enable_docker_vm" {
 }
 
 variable "sp_object_id" {
-  description = "Object ID of the service principal (principal_id) that runs Terraform"
   type        = string
+  description = "Object ID of the service principal"
+  default     = "<PUT-YOUR-SP-OBJECT-ID-HERE>"
 }
