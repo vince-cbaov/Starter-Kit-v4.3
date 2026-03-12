@@ -13,11 +13,6 @@ variable "admin_username" {
   default = "vinadmin"
 }
 
-variable "ssh_public_key" {
-  type    = string
-  default = ""
-}
-
 variable "acr_name" {
   type    = string
   default = "starterkitacr"
