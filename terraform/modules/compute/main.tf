@@ -28,16 +28,15 @@ resource "azurerm_network_security_group" "docker_nsg" {
   location            = var.location
   resource_group_name = var.rg_name
 
-  # ⚠ Insecure: Docker’s plaintext API on 2375
   security_rule {
-    name                       = "docker-remote"
+    name                       = "ssh-from-jenkins"
     priority                   = 1001
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
-    destination_port_range     = "2375"
-    source_address_prefixes    = "0.0.0.0/0"
+    destination_port_range     = "22"
+    source_address_prefixes    = [azurerm_network_interface.jenkins_nic[0].private_ip_address]
     destination_address_prefix = "*"
   }
 }
