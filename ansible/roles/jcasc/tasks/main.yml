@@ -1,0 +1,18 @@
+# ansible/roles/jcasc/tasks/main.yml
+---
+- name: Ensure Jenkins config directory exists
+  file:
+    path: /var/jenkins_home/casc_configs
+    state: directory
+    owner: jenkins
+    group: jenkins
+    mode: "0755"
+
+# TODO: copy your YAML(s) into casc_configs and point JCasC to them
+# - name: Deploy JCasC bundle
+#   copy:
+#     src: files/jenkins.yaml
+#     dest: /var/jenkins_home/casc_configs/jenkins.yaml
+#     owner: jenkins
+#     group: jenkins
+#     mode: "0644"

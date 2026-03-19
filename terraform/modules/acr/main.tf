@@ -1,5 +1,8 @@
+# modules/acr/main.tf
 locals {
-  name = var.name_override != "" ? var.name_override : replace("${var.name_prefix}acr", "-", "")
+  # Safe ACR name (lowercase, remove dashes). Ensure length 5-50 in your naming scheme.
+  base_name = var.name_override != "" ? var.name_override : replace("${var.name_prefix}acr", "-", "")
+  name      = lower(local.base_name)
 }
 
 resource "azurerm_container_registry" "acr" {

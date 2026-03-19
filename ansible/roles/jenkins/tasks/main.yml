@@ -1,19 +1,86 @@
 ---
-- name: Install dependencies
-  apt: name={{ item }} state=present update_cache=yes
-  loop:
-    - openjdk-17-jdk
-    - git
+# Jenkins on Debian/Ubuntu with modern signed-by keyring (2026 key)
 
-- name: Install Jenkins repo key
-  apt_key: url=https://pkg.jenkins.io/debian-stable/jenkins.io.key state=present
+# NOTE: Jenkins docs now recommend Java 21+ for current releases.
+# If your distro offers it, prefer openjdk-21-*; otherwise 17 works for older LTS.
+# See: https://www.jenkins.io/doc/book/installing/linux/
+- name: Install dependencies (Java + git)
+  apt:
+    name:
+      - fontconfig
+      - openjdk-21-jre
+      - git
+    state: present
+    update_cache: yes
+  become: true
+  ignore_errors: true  # Ignore if Java 21 not available; we'll try 17 next
 
-- name: Add Jenkins repo
-  apt_repository:
-    repo: 'deb https://pkg.jenkins.io/debian-stable binary/'
 
+# Optional fallback to Java 17 if 21 not present on this distro
+- name: Fallback to Java 17 if Java 21 install failed
+  apt:
+    name:
+      - openjdk-17-jre
+    state: present
+    update_cache: yes
+  become: true
+  when: ansible_failed_result is defined or false
+
+# Remove any stale Jenkins keyring (harmless if absent)
+- name: Remove potentially old Jenkins keyring (pre-2026 key)
+  file:
+    path: /usr/share/keyrings/jenkins-keyring.asc
+    state: absent
+  become: true
+
+# Download the NEW (2026) Jenkins repository signing key and store as keyring
+# Jenkins announced the 2026 key; using it avoids NO_PUBKEY 7198F4B714ABFC68.
+- name: Download Jenkins repository GPG key (2026) to keyring
+  get_url:
+    url: https://pkg.jenkins.io/debian-stable/jenkins.io-2026.key
+    dest: /usr/share/keyrings/jenkins-keyring.asc
+    mode: '0644'
+    force: true
+  become: true
+
+# Write the apt source using signed-by= the keyring we just installed
+- name: Add Jenkins apt repository (signed-by keyring)
+  copy:
+    dest: /etc/apt/sources.list.d/jenkins.list
+    mode: '0644'
+    content: |
+      deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/
+  become: true
+
+# Update cache explicitly before install (so we see clear GPG results)
+- name: apt update (refresh after new repo/key)
+  apt:
+    update_cache: yes
+  become: true
+
+# Install Jenkins
 - name: Install Jenkins
-  apt: name=jenkins state=present update_cache=yes
+  apt:
+    name: jenkins
+    state: present
+  become: true
 
+# Ensure Jenkins service is enabled and running
 - name: Ensure Jenkins running
-  service: name=jenkins state=started enabled=yes
+  service:
+    name: jenkins
+    state: started
+    enabled: yes
+  become: true
+
+- name: (Debian/Ubuntu) Allow Jenkins 8080 in UFW (only on jenkins hosts)
+  community.general.ufw:
+    rule: allow
+    port: "8080"
+    proto: tcp
+    comment: "Jenkins UI"
+  when:
+    - ansible_facts['os_family'] == 'Debian'
+    - "'jenkins' in group_names"
+  notify: reload ufw
+  become: true

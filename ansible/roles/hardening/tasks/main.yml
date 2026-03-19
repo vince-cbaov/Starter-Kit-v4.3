@@ -1,9 +1,101 @@
 ---
-- name: Install fail2ban
-  apt: name=fail2ban state=present
+# =========================
+# Debian/Ubuntu path
+# =========================
+- name: (Debian/Ubuntu) Ensure APT cache & universe repo are available
+  block:
+    - name: Install software-properties-common (to add repos)
+      apt:
+        name: software-properties-common
+        state: present
+        update_cache: yes
 
-- name: Configure UFW
-  ufw: rule=allow port=22 proto=tcp
+    - name: Add universe repository if missing
+      command: add-apt-repository -y universe
+      args:
+        creates: /etc/apt/sources.list.d/ubuntu-universe.list
 
-- name: Enable UFW
-  ufw: state=enabled
+    - name: Refresh apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install fail2ban
+      apt:
+        name: fail2ban
+        state: present
+        update_cache: yes
+  when: ansible_facts['os_family'] == 'Debian'
+  become: true
+
+
+# (Debian/Ubuntu) Ensure UFW is installed
+- name: (Debian/Ubuntu) Ensure UFW is installed
+  apt:
+    name: ufw
+    state: present
+    update_cache: yes
+  when: ansible_facts['os_family'] == 'Debian'
+  become: true
+
+# (Debian/Ubuntu) SAFER BASELINE FIREWALL POLICIES
+- name: (Debian/Ubuntu) Set default UFW policies (deny incoming, allow outgoing)
+  community.general.ufw:
+    direction: "{{ item.direction }}"
+    default: "{{ item.default }}"
+  loop:
+    - { direction: incoming, default: deny }
+    - { direction: outgoing, default: allow }
+  when: ansible_facts['os_family'] == 'Debian'
+  become: true
+
+
+# Allow SSH (port 22)
+- name: (Debian/Ubuntu) Allow SSH in UFW
+  community.general.ufw:
+    rule: allow
+    port: "22"
+    proto: tcp
+  when: ansible_facts['os_family'] == 'Debian'
+  notify: reload ufw
+  become: true
+
+
+# 🔥 ADD THIS: allow Docker TLS port 2376 ONLY on docker_server hosts
+- name: (Debian/Ubuntu) Allow Docker TLS 2376 in UFW (only on docker_server)
+  community.general.ufw:
+    rule: allow
+    port: "2376"
+    proto: tcp
+    comment: "Docker TLS"
+  when:
+    - ansible_facts['os_family'] == 'Debian'
+    - "'docker_server' in group_names"
+  notify: reload ufw
+  become: true
+
+
+# Enable firewall
+- name: (Debian/Ubuntu) Enable UFW
+  community.general.ufw:
+    state: enabled
+  when: ansible_facts['os_family'] == 'Debian'
+  notify: reload ufw
+  become: true
+
+
+# =========================
+# RHEL / Rocky / CentOS path
+# =========================
+- name: (RHEL) Enable EPEL
+  dnf:
+    name: epel-release
+    state: present
+  when: ansible_facts['os_family'] == 'RedHat'
+  become: true
+
+- name: (RHEL) Install fail2ban
+  dnf:
+    name: fail2ban
+    state: present
+  when: ansible_facts['os_family'] == 'RedHat'
+  become: true

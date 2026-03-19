@@ -28,51 +28,55 @@ module "monitoring" {
 }
 
 module "aks" {
-  source        = "./modules/aks"
-  rg_name       = module.rg.name
-  location      = module.rg.location
-  name_prefix   = var.name_prefix
-  node_vm_size  = "Standard_DS2_v2"
+  source       = "./modules/aks"
+  rg_name      = module.rg.name
+  location     = module.rg.location
+  name_prefix  = var.name_prefix
+  node_vm_size = "Standard_DS2_v2"
 }
 
+# ---- AcrPull for the kubelet identity ----
 resource "azurerm_role_assignment" "aks_acr_pull" {
-  scope                = module.acr.acr_id
-  role_definition_name = "AcrPull"
-  principal_id         = module.aks.kubelet_identity_object_id
+  scope                            = module.acr.acr_id
+  role_definition_name             = "AcrPull"
+  principal_id                     = module.aks.kubelet_identity_object_id
+  skip_service_principal_aad_check = true
+  depends_on                       = [module.aks, module.acr]
 }
 
+# ================================
+# Key Vault Module (OPTION E2)
+# Terraform seeds the secrets
+# ================================
 module "kv" {
   source      = "./modules/key_vault"
   rg_name     = module.rg.name
   location    = module.rg.location
   name_prefix = var.name_prefix
 
-  tenant_id   = var.tenant_id
-
-  # RBAC model inputs
+  # Who Terraform runs as (for KV RBAC write access)
   sp_object_id = var.sp_object_id
 
-  # Seed secrets as a map
-  secrets = {
-    "acr-sp-app-id" = var.sp_app_id
-    "acr-sp-secret" = var.sp_secret
-    "tenant-id"     = var.tenant_id
-    "acr-name"      = var.acr_name
-  }
+  # Tenant ID is still needed by the KV module
+  tenant_id = var.tenant_id
 
-  # Deprecated in RBAC model (removed):
-  # access_object_ids = []
+  # ALL secrets for KV Option E2 now come from tfvars:
+  secrets          = var.secrets
+  ssh_private_key  = var.ssh_private_key
+
+  # Optional extra access identities
+  access_object_ids = var.access_object_ids
 }
 
 module "compute" {
   source           = "./modules/compute"
   create_vms       = var.create_vms
   enable_docker_vm = var.enable_docker_vm
-
-  rg_name        = module.rg.name
-  location       = module.rg.location
-  name_prefix    = var.name_prefix
-  subnet_id      = module.network.subnet_id
-  admin_username = var.admin_username
-  ssh_public_key = var.ssh_public_key
+  rg_name          = module.rg.name
+  location         = module.rg.location
+  name_prefix      = var.name_prefix
+  subnet_id        = module.network.subnet_id
+  admin_username   = var.admin_username
+  ssh_public_key   = var.ssh_public_key
+  trusted_cidr     = "45.159.88.70/32"
 }

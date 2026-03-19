@@ -1,0 +1,176 @@
+---
+# Install Docker and enable TLS-secured remote API on 2376
+
+- name: Ensure apt cache is up to date
+  apt:
+    update_cache: yes
+  changed_when: false
+  become: true
+
+- name: Install Docker engine
+  apt:
+    name: docker.io
+    state: present
+  become: true
+
+# --- TLS certificate directory ---
+
+- name: Create Docker TLS directory
+  file:
+    path: /etc/docker/ssl
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+  become: true
+
+# CA private key
+- name: Create CA private key
+  command: openssl genrsa -out /etc/docker/ssl/ca-key.pem 4096
+  args:
+    creates: /etc/docker/ssl/ca-key.pem
+  become: true
+
+# CA certificate
+- name: Create CA certificate
+  command: >
+    openssl req -new -x509 -days 3650
+    -key /etc/docker/ssl/ca-key.pem
+    -subj "/CN=docker-ca"
+    -out /etc/docker/ssl/ca.pem
+  args:
+    creates: /etc/docker/ssl/ca.pem
+  become: true
+
+# Server key
+- name: Create server key
+  command: openssl genrsa -out /etc/docker/ssl/server-key.pem 4096
+  args:
+    creates: /etc/docker/ssl/server-key.pem
+  become: true
+
+# Server CSR
+- name: Create server CSR
+  command: >
+    openssl req -subj "/CN={{ inventory_hostname }}"
+    -new -key /etc/docker/ssl/server-key.pem
+    -out /etc/docker/ssl/server.csr
+  args:
+    creates: /etc/docker/ssl/server.csr
+  become: true
+
+# Sign certificate
+- name: Sign server certificate
+  command: >
+    openssl x509 -req -days 825
+    -in /etc/docker/ssl/server.csr
+    -CA /etc/docker/ssl/ca.pem
+    -CAkey /etc/docker/ssl/ca-key.pem
+    -CAcreateserial
+    -out /etc/docker/ssl/server-cert.pem
+  args:
+    creates: /etc/docker/ssl/server-cert.pem
+  become: true
+
+# Tighten permissions on private keys; public certs world-readable
+- name: Set private key permissions
+  file:
+    path: "{{ item }}"
+    owner: root
+    group: root
+    mode: "0600"
+  loop:
+    - /etc/docker/ssl/ca-key.pem
+    - /etc/docker/ssl/server-key.pem
+  become: true
+
+- name: Set public cert permissions
+  file:
+    path: "{{ item }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - /etc/docker/ssl/ca.pem
+    - /etc/docker/ssl/server-cert.pem
+  become: true
+
+# --- Configure Docker daemon to use TLS on 2376 ---
+- name: Configure Docker daemon for TLS
+  copy:
+    dest: /etc/docker/daemon.json
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      {
+        "hosts": ["unix:///var/run/docker.sock", "tcp://0.0.0.0:2376"],
+        "tlsverify": true,
+        "tlscacert": "/etc/docker/ssl/ca.pem",
+        "tlscert": "/etc/docker/ssl/server-cert.pem",
+        "tlskey": "/etc/docker/ssl/server-key.pem"
+      }
+  become: true
+
+# ---------- SYSTEMD OVERRIDE TO REMOVE -H fd:// ----------
+- name: Ensure systemd drop-in directory exists
+  file:
+    path: /etc/systemd/system/docker.service.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  become: true
+
+- name: Write systemd override to clear ExecStart (-H fd://)
+  copy:
+    dest: /etc/systemd/system/docker.service.d/override.conf
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      [Service]
+      ExecStart=
+      ExecStart=/usr/bin/dockerd
+  notify: reload systemd
+  become: true
+
+# Optional: validate the JSON early so failures are clear
+- name: Validate /etc/docker/daemon.json
+  shell: "python3 -m json.tool /etc/docker/daemon.json > /dev/null"
+  register: daemon_json_check
+  changed_when: false
+  become: true
+
+# Restart Docker with daemon_reload and show diagnostics if it fails
+- name: Restart Docker
+  systemd:
+    name: docker
+    state: restarted
+    enabled: true
+    daemon_reload: true
+  register: docker_restart
+  become: true
+
+- name: Show docker status on failure
+  command: systemctl status docker --no-pager -l
+  when: docker_restart is failed
+  register: docker_status
+  failed_when: false
+  changed_when: false
+  become: true
+
+- name: Show docker journal on failure
+  command: bash -lc "journalctl -xeu docker.service --no-pager | tail -n 200"
+  when: docker_restart is failed
+  register: docker_journal
+  failed_when: false
+  changed_when: false
+  become: true
+
+- name: Debug docker failure
+  debug:
+    msg:
+      - "{{ docker_status.stdout | default('no status') }}"
+      - "{{ docker_journal.stdout | default('no journal') }}"
+  when: docker_restart is failed

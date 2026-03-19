@@ -1,0 +1,42 @@
+---
+- name: Configure all servers
+  hosts: all
+  become: true
+
+  pre_tasks:
+    - name: Remove legacy Jenkins repo file if present
+      file:
+        path: /etc/apt/sources.list.d/jenkins.list
+        state: absent
+
+    - name: Remove legacy Jenkins keyring if present
+      file:
+        path: /usr/share/keyrings/jenkins-keyring.asc
+        state: absent
+
+    # Install the NEW (2026) Jenkins LTS repository key as a keyring
+    # Jenkins changed Linux repo signing keys in Dec 2025 / Jan 2026.
+    # See: https://www.jenkins.io/blog/2025/12/23/repository-signing-keys-changing/
+    - name: Install Jenkins 2026 repository key to keyring (LTS)
+      get_url:
+        url: https://pkg.jenkins.io/debian-stable/jenkins.io-2026.key
+        dest: /usr/share/keyrings/jenkins-keyring.asc
+        mode: '0644'
+
+    - name: Add Jenkins apt repository (signed-by keyring)
+      copy:
+        dest: /etc/apt/sources.list.d/jenkins.list
+        mode: '0644'
+        content: |
+          deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/
+
+    - name: apt update (after Jenkins repo/key fixed)
+      apt:
+        update_cache: yes
+
+  roles:
+    - hardening
+    - docker_server
+    - docker
+    - jenkins
+    - jcasc

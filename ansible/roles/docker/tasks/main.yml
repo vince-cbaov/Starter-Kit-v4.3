@@ -1,13 +1,6 @@
 ---
 - name: Install Docker engine
-  apt: { name: docker.io, state: present, update_cache: yes }
-- name: Enable Docker remote API on 2375 (insecure)
-  copy:
-    dest: /etc/docker/daemon.json
-    content: |
-      {"hosts": ["tcp://0.0.0.0:2375", "unix:///var/run/docker.sock"]}
-    owner: root
-    group: root
-    mode: '0644'
-- name: Restart Docker
-  systemd: { name: docker, state: restarted, enabled: yes }
+  apt:
+    name: docker.io
+    state: present
+    update_cache: yes
