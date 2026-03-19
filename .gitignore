@@ -1,11 +1,35 @@
-
+# Terraform directories
+.terraform/
+.terraform.lock.hcl
+terraform.tfvars
 **/.terraform/**
 **/.terraform.lock.hcl
+
+# Terraform state (if you don’t use remote backend)
+*.tfstate
+*.tfstate.backup
 *.tfstate
 *.tfstate.*
+envs/*/*.tfstate
+envs/*/*.tfstate.backup
+# Crash logs
 crash.log
 crash.*.log
+
 override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
+
+# Ignore .tfvars files, which are likely to contain sensitive data
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+crash.log
+*.plan
+
+# Local var files
+*.auto.tfvars
+envs/*/terraform.tfvars
