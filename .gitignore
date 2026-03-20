@@ -33,7 +33,6 @@ crash.log
 # Local var files
 *.auto.tfvars
 envs/*/terraform.tfvars
-terraform/**/*.tfvars
-*.tfvars
-# Ignore all env tfvars
-terraform/envs/*/terraform.tfvars   
+
+# Ignore only the Terraform envs folder
+terraform/envs/terraform/envs/
