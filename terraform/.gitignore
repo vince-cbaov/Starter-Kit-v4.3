@@ -36,7 +36,5 @@ envs/*/terraform.tfvars
 envs/*/backend.tfvars
 
 
-
 # Ignore only the Terraform envs folder
 terraform/envs/
-
