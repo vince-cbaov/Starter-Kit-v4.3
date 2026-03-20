@@ -33,3 +33,5 @@ crash.log
 # Local var files
 *.auto.tfvars
 envs/*/terraform.tfvars
+terraform/**/*.tfvars
+*.tfvars
