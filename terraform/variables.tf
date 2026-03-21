@@ -67,7 +67,7 @@ secrets = {
   acr-name      = "value"
 }
 EOT
-  type = map(string)
+  type        = map(string)
 }
 
 # Optional list for additional KV access
@@ -76,3 +76,19 @@ variable "access_object_ids" {
   default     = []
   description = "Optional extra identities to grant data-plane access to the Key Vault"
 }
+
+variable "rbac_wait_seconds" {
+  type        = number
+  default     = 30
+  description = "Seconds to wait for RBAC propagation before writing secrets"
+}
+
+variable "extra_role_assignments" {
+  type = list(object({
+    role_definition_name = string
+    scope                = string
+  }))
+  default     = []
+  description = "Optional extra management-plane role assignments for the created SP"
+}
+
