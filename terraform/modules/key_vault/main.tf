@@ -13,7 +13,7 @@ resource "azuread_service_principal" "sp" {
 
 resource "azuread_service_principal_password" "sp_secret" {
   service_principal_id = azuread_service_principal.sp.id
-  end_date_relative    = var.secret_end_date_relative
+  end_date             = timeadd(timestamp(), var.secret_end_date_relative)
 }
 
 # --- Decide KV creation vs. existing
@@ -31,31 +31,30 @@ resource "azurerm_key_vault" "kv" {
 
   soft_delete_retention_days = 7
   purge_protection_enabled   = true
-
   rbac_authorization_enabled = true
-
-  # Optional hardening (enable when you add private endpoints / network ACLs)
-  # public_network_access_enabled = false
-
-  # tags = {
-  #   "managed-by" = "terraform"
-  #   "component"  = "key-vault"
-  # }
 }
 
-# Effective KV ID (created or provided)
+# Effective KV ID
 locals {
   key_vault_id_effective = var.create_key_vault ? azurerm_key_vault.kv[0].id : var.key_vault_id
 }
 
-# --- Data-plane RBAC: allow Terraform's identity to WRITE secrets
+# --- RBAC for Terraform Caller (required for secret creation)
+resource "azurerm_role_assignment" "tf_kv_admin" {
+  scope                = local.key_vault_id_effective
+  role_definition_name = "Key Vault Administrator"
+  principal_id         = data.azurerm_client_config.current.object_id
+
+  depends_on = [azurerm_key_vault.kv]
+}
+
+# --- Data-plane RBAC: allow the created SP to write secrets
 resource "azurerm_role_assignment" "kv_secrets_officer" {
   scope                            = local.key_vault_id_effective
   role_definition_name             = "Key Vault Secrets Officer"
-  principal_id                     = var.sp_object_id
+  principal_id                     = azuread_service_principal.sp.object_id
   skip_service_principal_aad_check = true
 
-  # If creating KV, ensure the vault exists first
   depends_on = [azurerm_key_vault.kv]
 }
 
@@ -69,9 +68,12 @@ resource "azurerm_role_assignment" "extra_access" {
   depends_on                       = [azurerm_key_vault.kv]
 }
 
-# --- Wait for RBAC propagation before writing secrets
+# --- Wait for RBAC propagation
 resource "time_sleep" "wait_for_rbac" {
-  depends_on      = [azurerm_role_assignment.kv_secrets_officer]
+  depends_on = [
+    azurerm_role_assignment.kv_secrets_officer,
+    azurerm_role_assignment.tf_kv_admin
+  ]
   create_duration = "${var.rbac_wait_seconds}s"
 }
 
@@ -85,7 +87,6 @@ resource "azurerm_key_vault_secret" "sp_client_secret" {
   depends_on = [time_sleep.wait_for_rbac]
 
   lifecycle {
-    # Avoid rotation noise in plans
     ignore_changes = [value]
   }
 }
@@ -118,7 +119,7 @@ resource "azurerm_key_vault_secret" "seed" {
   }
 }
 
-# --- Management-plane roles for the created SP at the chosen scope
+# --- Management-plane roles for the created SP
 resource "azurerm_role_assignment" "sp_contributor" {
   count                = var.assign_contributor ? 1 : 0
   scope                = var.sp_role_assignment_scope

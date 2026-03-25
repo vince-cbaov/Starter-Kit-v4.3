@@ -51,19 +51,15 @@ resource "azurerm_network_interface" "jenkins_nic" {
 }
 
 # ---------------------------------
-# Shared NSG (create if not provided)
+# Shared NSG - ALWAYS CREATED
 # ---------------------------------
-locals {
-  shared_nsg_name = var.nsg_name != null ? var.nsg_name : "${var.name_prefix}-shared-nsg"
-}
 
 resource "azurerm_network_security_group" "shared_nsg" {
-  count               = var.nsg_id == null && var.create_nsg ? 1 : 0
-  name                = local.shared_nsg_name
+  name                = "sk-dev-nsg"
   location            = var.location
   resource_group_name = var.rg_name
 
-  # SSH (22) - restrict to trusted CIDR
+  # SSH (22)
   security_rule {
     name                       = "ssh"
     priority                   = 1001
@@ -76,8 +72,7 @@ resource "azurerm_network_security_group" "shared_nsg" {
     destination_address_prefix = "*"
   }
 
-  # Jenkins UI (8080) - restrict to trusted CIDR (recommended)
-  # If you must open to internet, change to ["0.0.0.0/0"] or front with a reverse proxy.
+  # Jenkins UI (8080)
   security_rule {
     name                       = "jenkins-ui"
     priority                   = 1002
@@ -90,7 +85,7 @@ resource "azurerm_network_security_group" "shared_nsg" {
     destination_address_prefix = "*"
   }
 
-  # Docker remote TLS (2376) - restrict to trusted CIDR
+  # Docker remote TLS (2376)
   security_rule {
     name                       = "docker-remote-tls"
     priority                   = 1003
@@ -104,22 +99,20 @@ resource "azurerm_network_security_group" "shared_nsg" {
   }
 }
 
-# Which NSG ID to use: existing or created
-locals {
-  effective_nsg_id = var.nsg_id != null ? var.nsg_id : try(azurerm_network_security_group.shared_nsg[0].id, null)
-}
+# ---------------------------------
+# NIC -> NSG Associations (safe)
+# ---------------------------------
 
-# Associate the same NSG to both NICs (if VM exists and NSG is available)
 resource "azurerm_network_interface_security_group_association" "docker_nsg_assoc" {
-  count                     = var.enable_docker_vm && local.effective_nsg_id != null ? 1 : 0
+  count                     = var.enable_docker_vm ? 1 : 0
   network_interface_id      = azurerm_network_interface.docker_nic[0].id
-  network_security_group_id = local.effective_nsg_id
+  network_security_group_id = azurerm_network_security_group.shared_nsg.id
 }
 
 resource "azurerm_network_interface_security_group_association" "jenkins_nsg_assoc" {
-  count                     = var.create_vms && local.effective_nsg_id != null ? 1 : 0
+  count                     = var.create_vms ? 1 : 0
   network_interface_id      = azurerm_network_interface.jenkins_nic[0].id
-  network_security_group_id = local.effective_nsg_id
+  network_security_group_id = azurerm_network_security_group.shared_nsg.id
 }
 
 # ---------------------------
@@ -193,6 +186,6 @@ output "jenkins_public_ip" {
 }
 
 output "effective_nsg_id" {
-  description = "NSG used by both NICs (existing or created)."
-  value       = local.effective_nsg_id
+  description = "ID of the shared NSG"
+  value       = azurerm_network_security_group.shared_nsg.id
 }

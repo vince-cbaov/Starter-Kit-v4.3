@@ -1,86 +1,91 @@
 ############################################
-# ROOT VARIABLES — Option E2 (Terraform creates KV secrets)
+# ROOT VARIABLES — Final Aligned Version
 ############################################
 
+#
+# Global Settings
+#
 variable "location" {
-  type    = string
-  default = "northeurope"
+  type        = string
+  description = "Azure region to deploy into"
+  default     = "northeurope"
 }
 
 variable "name_prefix" {
-  type    = string
-  default = "sk-dev"
+  type        = string
+  description = "Environment prefix (e.g., sk-dev, sk-prod)"
+  default     = "sk-dev"
 }
 
+variable "trusted_cidr" {
+  type        = string
+  description = "CIDR allowed to access exposed services (NSG rules)"
+}
+
+#
+# Compute / VM Settings
+#
 variable "admin_username" {
-  type    = string
-  default = "vinadmin"
-}
-
-variable "acr_name" {
-  type    = string
-  default = "starterkitacr"
-}
-
-variable "create_vms" {
-  type    = bool
-  default = true
-}
-
-variable "enable_docker_vm" {
-  type    = bool
-  default = true
+  type        = string
+  description = "VM administrator username"
 }
 
 variable "ssh_public_key" {
-  description = "SSH public key for admin access"
   type        = string
+  description = "SSH public key for VM login"
 }
 
-# -------------------------
-# FOR KEY VAULT MODULE
-# -------------------------
-
-variable "tenant_id" {
-  description = "Azure AD Tenant ID"
-  type        = string
+variable "create_vms" {
+  type        = bool
+  description = "Whether to create Jenkins VM"
+  default     = true
 }
 
+variable "enable_docker_vm" {
+  type        = bool
+  description = "Whether to create Docker VM"
+  default     = true
+}
+
+#
+# ACR
+#
+variable "acr_name" {
+  type        = string
+  description = "Override ACR name (optional)"
+  default     = null
+}
+
+#
+# Key Vault + SP Settings
+#
 variable "sp_object_id" {
-  description = "Object ID of the identity running Terraform"
   type        = string
+  description = "Object ID of the identity running Terraform (for KV secret writes)"
 }
 
 variable "ssh_private_key" {
-  description = "Private SSH key to store in Key Vault"
   type        = string
+  description = "Optional SSH private key to store in KV"
+  default     = null
 }
 
 variable "secrets" {
-  description = <<EOT
-Map of Key Vault secrets to create in Option E2.
-Example:
-secrets = {
-  acr-sp-app-id = "value"
-  acr-sp-secret = "value"
-  tenant-id     = "value"
-  acr-name      = "value"
-}
-EOT
   type        = map(string)
+  description = "Map of Key Vault secrets to create"
+  default     = {}
 }
 
-# Optional list for additional KV access
 variable "access_object_ids" {
   type        = list(string)
+  description = "Additional identities to grant KV data-plane access"
   default     = []
-  description = "Optional extra identities to grant data-plane access to the Key Vault"
 }
 
 variable "rbac_wait_seconds" {
   type        = number
-  default     = 30
-  description = "Seconds to wait for RBAC propagation before writing secrets"
+  description = "Wait time for RBAC propagation before writing secrets"
+  default     = 60
 }
 
 variable "extra_role_assignments" {
@@ -88,7 +93,6 @@ variable "extra_role_assignments" {
     role_definition_name = string
     scope                = string
   }))
+  description = "Optional extra management-plane RBAC assignments for the SP"
   default     = []
-  description = "Optional extra management-plane role assignments for the created SP"
 }
-
