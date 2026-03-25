@@ -1,21 +1,32 @@
-# Starter Kit v4.3 (Runtime-Input + Docker Server + Branding)
+# Starter Kit v4.3 (Runtime-Input + Docker Server + Branding + Updated Deployment Flow)
 
 This repository contains a complete, production‑style DevOps starter kit that demonstrates the full CI/CD lifecycle on Azure using Terraform, Jenkins, Docker, Helm, AKS, and Azure Key Vault. It also includes two applications:
 
-*   A **static CI/CD web app** (deployed by the pipeline):
-    *   `app/index.html` → v1 homepage (simple black page)
-    *   `app/index_apply.html` → full Apply & Prove page (Modules 4–6), includes v2 splash
-    *   `app/index_with_logo.html` → v2 splash (not deployed standalone)
-    *   `app/devops-logo.png` → shared asset
+### Applications
 
-*   A **Flask portfolio app** for local usage and EPA evidence (not deployed by CI/CD):
+1.  **Static CI/CD Web App (deployed by the pipeline):**
+    *   `app/index.html` – v1 homepage
+    *   `app/index_apply.html` – full Apply & Prove page (Modules 4–6), includes v2 splash
+    *   `app/index_with_logo.html` – v2 splash page (referenced inside Apply page; not deployed alone)
+    *   `app/devops-logo.png` – shared asset
+
+2.  **Flask Portfolio App (local use, not deployed by CI/CD):**
     *   `app/flask-portfolio/app.py`
-    *   `app/flask-portfolio/templates/{index.html, apply.html}`
-    *   `app/flask-portfolio/static/{styles.css, devops-logo.png}`
+    *   Templates: `index.html`, `apply.html`
+    *   Static: `styles.css`, `devops-logo.png`
+
+The Starter Kit now incorporates:
+
+*   Full infrastructure deployment using Terraform
+*   VM configuration using Ansible (Docker Server + optional Jenkins)
+*   Application deployment to AKS using Helm
+*   Secure runtime secrets using Key Vault CSI
+*   CI/CD using GitHub Actions or Jenkins (your choice)
+*   A structured, EPA-compliant evidence trail
 
 ***
 
-## **Folder Structure (High Level)**
+## Folder Structure (High Level)
 
     starter_kit_v4_3/
     │
@@ -39,9 +50,9 @@ This repository contains a complete, production‑style DevOps starter kit that 
     │   │   ├── static/{styles.css,devops-logo.png}
     │   │   ├── templates/{index.html,apply.html}
     │   │   └── app.py
-    │   ├── index.html                 # v1 (CI/CD homepage)
-    │   ├── index_apply.html           # CI/CD full page (includes v2)
-    │   ├── index_with_logo.html       # v2 splash (not standalone in CI/CD)
+    │   ├── index.html
+    │   ├── index_apply.html
+    │   ├── index_with_logo.html
     │   └── devops-logo.png
     │
     ├── k8s/
@@ -54,9 +65,9 @@ This repository contains a complete, production‑style DevOps starter kit that 
 
 ***
 
-## **Secrets — Runtime‑Input Model**
+## Secrets — Runtime‑Input Model
 
-No secrets are stored in the repository. They must be supplied at Terraform apply-time:
+No secrets are stored in the repository. They must be supplied at Terraform runtime using environment variables:
 
 ```bash
 export SP_APP_ID="<GUID>"
@@ -65,21 +76,34 @@ export TENANT_ID="<GUID>"
 export SSH_PUBLIC_KEY="$(cat ~/.ssh/id_ed25519.pub)"
 ```
 
-Terraform writes into Key Vault:
+The Terraform Key Vault module stores these as:
 
 *   `acr-sp-app-id`
 *   `acr-sp-secret`
 *   `tenant-id`
 *   `acr-name`
 
+These are later consumed by AKS pods using the Key Vault CSI driver or by Jenkins for pipeline authentication.
+
 ***
 
-## **Provision Infrastructure (dev)**
+## Provision Infrastructure (dev)
+
+Move to the dev environment:
 
 ```bash
 cd terraform/envs/dev
-terraform init -backend-config=backend.tfvars
+```
 
+Initialise backend:
+
+```bash
+terraform init -backend-config=backend.tfvars
+```
+
+Deploy infrastructure:
+
+```bash
 terraform apply -auto-approve \
   -var="location=northeurope" \
   -var="name_prefix=sk-dev" \
@@ -93,59 +117,138 @@ terraform apply -auto-approve \
   -var="enable_docker_vm=true"
 ```
 
-Creates:  
-Resource Group, VNet, Subnet, NSG, ACR, AKS, Key Vault, Log Analytics Workspace, and a Docker Build VM (remote API at `tcp://<docker-ip>:2375`).
+This creates:
+
+*   Resource Group
+*   Virtual Network, Subnet, NSG
+*   Azure Container Registry
+*   Azure Kubernetes Service
+*   Azure Key Vault (RBAC)
+*   Log Analytics Workspace
+*   Docker Build VM (`tcp://<docker-ip>:2375` insecure API – lock down with NSG)
+*   Optional Jenkins VM
 
 ***
 
-## **Jenkins + Azure Key Vault**
+## Accessing the VMs and Unlocking Jenkins
 
-1.  Install Jenkins plugins:
-    *   Azure Credentials
-    *   Azure Key Vault
-    *   Docker
-    *   Git
-    *   Pipeline
+Test VM ports:
 
-2.  Create Jenkins credential:
-    *   ID: `azure-sp`
-    *   Type: Azure Service Principal
+```bash
+nc -vz <docker_ip> 22
+nc -vz <jenkins_ip> 22
+```
 
-3.  Set build parameters:
-    *   `KV_URL = https://<kv_name>.vault.azure.net/`
-    *   `DOCKER_SERVER_IP = <docker_vm_ip>`
+SSH:
 
-The Jenkinsfile:
+```bash
+ssh vinadmin@<jenkins_ip>
+```
 
-*   Fetches secrets from Key Vault
-*   Builds on the remote Docker VM
-*   Pushes to ACR
-*   Deploys to AKS via Helm
-*   Confirms rollout
+Retrieve Jenkins unlock password:
+
+```bash
+sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+```
+
+Open:
+
+    http://<jenkins_ip>:8080
 
 ***
 
-## **Static CI/CD App (What the Pipeline Deploys)**
+## Ansible Server Configuration
 
-CI/CD publishes ONLY the static site located in the root of `/app`:
+Ansible inventories live under `ansible/inventory/`.
 
-    app/index.html          # v1 homepage
-    app/index_apply.html    # main Apply & Prove page (contains v2)
+To configure Docker Server + Jenkins:
+
+```bash
+cd ansible
+ansible -i inventory.ini all -m ping
+ansible-playbook -i inventory.ini site.yml
+```
+
+Roles applied:
+
+*   Hardening
+*   Docker server
+*   Docker engine
+*   Jenkins
+*   Jenkins Configuration as Code (JCasC)
+
+***
+
+## Jenkins + Azure Key Vault (Updated Model)
+
+### Required Plugins
+
+Not included by default:
+
+*   Docker Pipeline
+*   Docker API
+*   Docker Commons
+*   Azure CLI
+*   Azure Credentials
+*   Kubernetes CLI
+*   Git Plugin
+*   Pipeline: Declarative
+*   Credentials Binding
+
+### Create Service Principal Credential
+
+In Jenkins:
+
+*   ID: `azure-sp`
+*   Type: Secret Text
+*   Paste entire JSON from:
+
+```bash
+az ad sp create-for-rbac --sdk-auth
+```
+
+### Pipeline Behaviour
+
+The Jenkinsfile performs:
+
+1.  Source checkout
+2.  Azure login using SP
+3.  ACR login
+4.  Remote Docker build on the Docker VM
+5.  Push image to ACR
+6.  `az aks get-credentials`
+7.  Helm deploy to AKS
+8.  Rollout verification
+
+***
+
+## Static CI/CD App (Deployed to AKS)
+
+The CI/CD app consists of:
+
+    app/index.html
+    app/index_apply.html
     app/devops-logo.png
 
-`index_with_logo.html` (v2 splash) is only referenced inside `index_apply.html`; it is **not deployed separately**.
+Notes:
 
-Deployment options:
+*   `index_with_logo.html` is imported inside `index_apply.html`.
+*   It is not deployed as a standalone page.
+*   The pipeline copies only these static files into an NGINX container or other hosting method defined in Helm.
 
-*   NGINX container on AKS
+Possible deployment methods:
+
+*   NGINX container hosted in AKS (default)
 *   Azure Storage Static Website
-*   Any static hosting platform
+*   Any static web hosting provider
 
 ***
 
-## **Flask Portfolio App (Local Use)**
+## Flask Portfolio App (Local Only)
 
-To run locally:
+This is for portfolio/EPA evidence and not part of the CI/CD pipeline.
+
+Run locally:
 
 ```bash
 cd app/flask-portfolio
@@ -153,66 +256,70 @@ pip install flask
 python app.py
 ```
 
-Accessible at `http://127.0.0.1:5000/`.
+Open:
 
-This app is used for:
-
-*   EPA evidence
-*   Local demonstrations
-*   Portfolio UI
-
-It is not deployed by CI/CD unless containerised separately.
+    http://127.0.0.1:5000/
 
 ***
 
-## **AKS + Azure Key Vault CSI**
+## AKS + Azure Key Vault CSI (Updated)
 
-Enable AKV CSI and mount secrets into workloads:
+Enable CSI driver:
 
 ```bash
 az aks enable-addons -g <rg> -n <aks> --addons azure-keyvault-secrets-provider
+```
 
+Apply SecretProviderClass:
+
+```bash
 sed -e "s/KV_NAME_TO_FILL/$(terraform -chdir=.. output -raw kv_name)/" \
     -e "s/TENANT_ID_TO_FILL/$TENANT_ID/" \
     k8s/csi/secretproviderclass.tmpl.yaml | kubectl apply -f -
 ```
 
+Secrets then appear inside pods at:
+
+    /mnt/secrets
+
 ***
 
-## **Evidence Checklist**
+## Evidence Checklist
 
-Use `evidence_checklist_v4_3.html` to collect all Apply & Prove evidence:
+Located in `evidence_checklist_v4_3.html`.
 
-*   Terraform execution
+Covers:
+
+*   Terraform deployment
 *   Key Vault secrets
-*   Jenkins Key Vault usage
-*   Docker VM remote build
+*   Jenkins secret retrieval
+*   Docker VM remote builds
 *   ACR push
-*   AKS rollout success
-*   Optional CSI secret mount evidence
+*   AKS rollout
+*   Optional CSI evidence
 
 ***
 
-## **Security Notes**
+## Security Notes
 
-*   Lock Docker API port 2375 to **Jenkins VM only**.
-*   Prefer TLS/2376 if needed in production.
-*   Never store secrets in the repo.
-*   Use MSI‑based AcrPull permissions for AKS → ACR.
+*   Restrict Docker API port 2375 to Jenkins VM only.
+*   Use TLS (port 2376) for production Docker.
+*   Store secrets in Key Vault only, never in repo.
+*   Ensure AKS → ACR uses managed identity with AcrPull role.
 
 ***
 
-## **Support and Extensions**
+## Support and Extensions
 
 Available on request:
 
-*   TLS-enabled Docker API
-*   AKS Ingress with TLS
+*   TLS-enabled Docker remote API
+*   AKS Ingress with HTTPS
 *   External Secrets Operator
-*   Monitoring dashboard (`/monitor`)
-*   Deploying Flask to AKS
-*   Additional pipeline environments
+*   Monitoring dashboards
+*   Flask deployment to AKS
+*   Multi-environment pipeline support (dev/prod)
 
 ***
 
-If you want a **README.md for the Flask app**, or a **README.md for CI/CD only**, or a **shorter README**, I can generate that too.
+If you want a shorter README, a CI/CD-specific README, or a separate README for the Flask app, I can generate those as well.
