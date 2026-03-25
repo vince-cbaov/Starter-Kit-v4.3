@@ -1,11 +1,48 @@
 #!/usr/bin/env bash
 set -euo pipefail
-cd "$(dirname "$0")/../terraform/envs/dev"
-: "${SP_APP_ID:?Set SP_APP_ID}"
-: "${SP_SECRET:?Set SP_SECRET}"
-: "${TENANT_ID:?Set TENANT_ID}"
-: "${ACR_NAME:=starterkitacr}"
-: "${SSH_PUBLIC_KEY:=}"
-terraform init -backend-config=backend.tfvars
-terraform apply -auto-approve   -var="location=northeurope"   -var="name_prefix=sk-dev"   -var="admin_username=vinadmin"   -var="acr_name=$ACR_NAME"   -var="sp_app_id=$SP_APP_ID"   -var="sp_secret=$SP_SECRET"   -var="tenant_id=$TENANT_ID"   -var="ssh_public_key=$SSH_PUBLIC_KEY"   -var="create_vms=true"   -var="enable_docker_vm=true"
-terraform output -json > ../tf_outputs_dev.json
+
+#
+# Starter Kit v4.3 – DEV Deployment Script
+# Updated to match the exact deploy workflow used manually:
+#   terraform fmt
+#   terraform init (with backend config)
+#   terraform validate
+#   terraform plan -var-file
+#   terraform apply -var-file
+#
+
+# Navigate to the root terraform directory
+cd "$(dirname "$0")/../terraform"
+
+echo "======================================================="
+echo " Starter Kit v4.3 - Terraform DEV Deployment"
+echo " Using envs/dev/terraform.tfvars"
+echo "======================================================="
+
+#
+# Format and validate
+#
+terraform fmt -recursive
+terraform init -reconfigure -backend-config="envs/dev/backend.tfvars"
+terraform validate
+
+#
+# Plan
+#
+terraform plan -var-file="envs/dev/terraform.tfvars"
+
+#
+# Apply
+#
+terraform apply -var-file="envs/dev/terraform.tfvars"
+
+#
+# Export outputs to JSON (optional convenience)
+#
+terraform output -json > envs/dev/tf_outputs_dev.json
+
+echo ""
+echo "======================================================="
+echo " DEV environment deployed successfully."
+echo " Outputs saved to: terraform/envs/dev/tf_outputs_dev.json"
+echo "======================================================="

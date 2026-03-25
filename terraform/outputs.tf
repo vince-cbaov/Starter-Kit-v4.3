@@ -6,6 +6,14 @@ output "kv_uri" {
   value = module.kv.kv_uri
 }
 
+output "rg_name" {
+  value = module.rg.name
+}
+
+output "rg_location" {
+  value = module.rg.location
+}
+
 output "acr_name" {
   value = module.acr.name
 }
