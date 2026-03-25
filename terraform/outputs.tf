@@ -21,3 +21,6 @@ output "aks_name" {
 output "docker_vm_ip" {
   value = module.compute.docker_public_ip
 }
+output "jenkins_vm_ip" {
+  value = module.compute.jenkins_public_ip
+}
