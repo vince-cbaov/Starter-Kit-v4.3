@@ -7,12 +7,25 @@ spec:
   template:
     metadata: { labels: { app: myapp } }
     spec:
+      volumes:
+        - name: kv-secrets
+          csi:
+            driver: secrets-store.csi.x-k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: akv-secrets
+
       containers:
         - name: myapp
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          ports: [{ containerPort: 8080 }]
+          ports: [{ containerPort: 80 }]
           readinessProbe:
-            httpGet: { path: /healthz, port: 8080 }
+            httpGet: { path: /healthz, port: 80 }
             initialDelaySeconds: 5
             periodSeconds: 10
+
+          volumeMounts:
+            - name: kv-secrets
+              mountPath: "/mnt/secrets"
+              readOnly: true

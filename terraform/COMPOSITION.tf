@@ -69,8 +69,8 @@ module "compute" {
   trusted_cidr = "45.159.88.70/32"
 
   # Reuse NSG created in the network layer (preferred)
-  
-  
+
+
   # nsg_name not needed when reusing
 }
 
