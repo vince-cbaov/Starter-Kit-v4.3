@@ -96,3 +96,8 @@ variable "extra_role_assignments" {
   description = "Optional extra management-plane RBAC assignments for the SP"
   default     = []
 }
+
+variable "tenant_id" {
+  type        = string
+  description = "Azure Tenant ID (for CSI driver configuration)"
+}
