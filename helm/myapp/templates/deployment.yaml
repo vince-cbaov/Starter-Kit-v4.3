@@ -1,11 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
-metadata: { name: myapp }
+metadata:
+  name: myapp
 spec:
   replicas: {{ .Values.replicaCount }}
-  selector: { matchLabels: { app: myapp } }
+  selector:
+    matchLabels:
+      app: myapp
   template:
-    metadata: { labels: { app: myapp } }
+    metadata:
+      labels:
+        app: myapp
     spec:
       volumes:
         - name: kv-secrets
@@ -19,11 +24,18 @@ spec:
         - name: myapp
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          ports: [{ containerPort: 80 }]
+          ports:
+            - containerPort: 80
+
           readinessProbe:
-            httpGet: { path: /healthz, port: 80 }
+            httpGet:
+              path: /
+              port: 80
             initialDelaySeconds: 5
             periodSeconds: 10
+            timeoutSeconds: 1
+            successThreshold: 1
+            failureThreshold: 3
 
           volumeMounts:
             - name: kv-secrets
