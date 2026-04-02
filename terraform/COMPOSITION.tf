@@ -40,6 +40,8 @@ module "aks" {
   rg_name      = module.rg.name
   location     = module.rg.location
   name_prefix  = var.name_prefix
+  cluster_name = var.cluster_name
+  dns_prefix   = var.dns_prefix
   node_vm_size = "Standard_DS2_v2"
 }
 
@@ -79,6 +81,7 @@ module "compute" {
 module "kv" {
   source      = "./modules/key_vault"
   rg_name     = module.rg.name
+  rg_id       = module.rg.id
   location    = module.rg.location
   name_prefix = var.name_prefix
 

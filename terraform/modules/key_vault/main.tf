@@ -88,6 +88,9 @@ resource "azurerm_key_vault_secret" "sp_client_secret" {
 
   lifecycle {
     ignore_changes = [value]
+    replace_triggered_by = [
+      azuread_service_principal_password.sp_secret.id
+    ]
   }
 }
 
@@ -147,5 +150,8 @@ resource "azurerm_role_assignment" "sp_extra" {
   principal_id         = azuread_service_principal.sp.object_id
 
   skip_service_principal_aad_check = true
-  depends_on                       = [azuread_service_principal.sp]
+  depends_on = [
+    azuread_service_principal.sp,
+    var.rg_id
+  ]
 }

@@ -3,6 +3,11 @@ variable "rg_name" {
   description = "Resource group that will contain the Key Vault (if created)."
 }
 
+variable "rg_id" {
+  type        = string
+  description = "Resource group ID (for role assignment dependencies)."
+}
+
 variable "location" {
   type        = string
   description = "Azure region for the Key Vault (if created)."
