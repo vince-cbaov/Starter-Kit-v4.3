@@ -37,3 +37,7 @@ output "client_secret_name" {
   description = "Name of the KV secret that holds the SP client secret."
   value       = azurerm_key_vault_secret.sp_client_secret.name
 }
+
+output "workload_identity_client_id" {
+  value = azurerm_user_assigned_identity.workload_id.client_id
+}

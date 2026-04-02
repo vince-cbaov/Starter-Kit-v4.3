@@ -11,6 +11,7 @@ spec:
     metadata:
       labels:
         app: myapp
+        azure.workload.identity/use: "true"
     spec:
       volumes:
         - name: kv-secrets
@@ -19,6 +20,7 @@ spec:
             readOnly: true
             volumeAttributes:
               secretProviderClass: akv-secrets
+              serviceAccountName: myapp-sa
 
       containers:
         - name: myapp

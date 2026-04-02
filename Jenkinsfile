@@ -40,6 +40,23 @@ pipeline {
       steps { checkout scm }
     }
 
+    stage('Get Workload Identity Client ID') {
+      steps {
+        script {
+          WORKLOAD_IDENTITY_CLIENT_ID = sh(
+            script: "terraform output -raw workload_identity_client_id",
+            returnStdout: true
+          ).trim()
+
+          if (!WORKLOAD_IDENTITY_CLIENT_ID) {
+            error "Failed to fetch workload identity client ID from Terraform output"
+      }
+
+          echo "Using Workload Identity Client ID: ${WORKLOAD_IDENTITY_CLIENT_ID}"
+        }
+      }
+    }
+
     stage('Build on Docker VM') {
       steps {
         script {
@@ -71,16 +88,16 @@ pipeline {
 
     stage('Helm Deploy') {
       steps {
-        // Requires kubectl/helm and a kubeconfig on the agent
         sh '''
           set -e
           helm upgrade --install myapp helm/myapp \
             --namespace starterkit --create-namespace \
             --set image.repository="$ACR_NAME.azurecr.io/$IMAGE_NAME" \
-            --set image.tag="${GIT_COMMIT}"
+            --set image.tag="${GIT_COMMIT}" \
+            --set workloadIdentity.clientId="${WORKLOAD_IDENTITY_CLIENT_ID}"
         '''
       }
-    }
+  }
 
     stage('Rollout Status') {
       steps {

@@ -34,6 +34,12 @@ resource "azurerm_key_vault" "kv" {
   rbac_authorization_enabled = true
 }
 
+resource "azurerm_role_assignment" "workload_kv_access" {
+  scope                = azurerm_key_vault.kv.id
+  role_definition_name = "Key Vault Secrets User"
+  principal_id         = azurerm_user_assigned_identity.workload_id.principal_id
+}
+
 # Effective KV ID
 locals {
   key_vault_id_effective = var.create_key_vault ? azurerm_key_vault.kv[0].id : var.key_vault_id

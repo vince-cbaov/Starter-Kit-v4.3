@@ -20,3 +20,5 @@ azure:
   clientID: ""
   tenantID: ""
   keyVaultName: ""
+workloadIdentity:
+  clientId: "<CLIENT_ID_FROM_TERRAFORM_OUTPUT>"
