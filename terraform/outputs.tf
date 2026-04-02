@@ -38,3 +38,6 @@ output "jenkins_vm_ip" {
   value = module.compute.jenkins_public_ip
 }
 
+output "kube_config" {
+  value = azurerm_kubernetes_cluster.aks.kube_config[0]
+}
