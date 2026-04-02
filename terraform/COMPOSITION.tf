@@ -115,6 +115,23 @@ module "kv" {
   extra_role_assignments   = var.extra_role_assignments
 }
 
+# --- AKV CSI SecretProviderClass (OIDC / Workload Identity)
+resource "kubectl_manifest" "secretproviderclass" {
+  yaml_body = templatefile(
+    "${path.root}/k8s/csi/secretproviderclass.yaml.tftpl",
+    {
+      client_id     = module.kv.application_id
+      tenant_id     = data.azurerm_client_config.current.tenant_id
+      keyvault_name = module.kv.kv_name
+    }
+  )
+
+  depends_on = [
+    module.aks,
+    module.kv
+  ]
+}
+
 
 # Convenience outputs (like example)
 output "client_id" {
@@ -131,3 +148,9 @@ output "key_vault_id" {
   value       = module.kv.kv_id
   description = "Resource ID of the Key Vault in use."
 }
+
+output "client_id" {
+  value       = module.kv.application_id
+  description = "Client ID of the created Azure AD application."
+}
+

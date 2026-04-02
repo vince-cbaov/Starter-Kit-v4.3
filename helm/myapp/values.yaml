@@ -15,3 +15,8 @@ ingress:
           pathType: Prefix
 resources: {}
 replicaCount: 1
+
+azure:
+  clientID: ""
+  tenantID: ""
+  keyVaultName: ""
