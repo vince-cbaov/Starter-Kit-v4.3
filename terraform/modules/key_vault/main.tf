@@ -39,6 +39,13 @@ resource "azurerm_role_assignment" "workload_kv_access" {
   depends_on = [azurerm_key_vault.kv]
 }
 
+# --- UAMI ACCESS (if not using workload identity)
+resource "azurerm_role_assignment" "uami_kv_secrets_user" {
+  scope                = azurerm_key_vault.kv.id
+  role_definition_name = "Key Vault Secrets User"
+  principal_id         = azurerm_user_assigned_identity.myapp.principal_id
+}
+
 # --- Optional: extra read access
 resource "azurerm_role_assignment" "extra_access" {
   for_each                         = toset(var.access_object_ids)
