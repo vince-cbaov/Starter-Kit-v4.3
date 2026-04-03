@@ -6,6 +6,12 @@ terraform {
       source  = "hashicorp/azurerm"
       version = ">= 3.80.0"
     }
+
+    kubectl = {
+      source  = "gavinbunney/kubectl"
+      version = "~> 1.14"
+    }
+
     azuread = {
       source  = "hashicorp/azuread"
       version = ">= 2.47.0"

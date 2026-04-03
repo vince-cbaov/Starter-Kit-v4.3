@@ -102,11 +102,11 @@ variable "tenant_id" {
   description = "Azure Tenant ID (for CSI driver configuration)"
 }
 
-variable "resource_group_name" {
-  type        = string
-  description = "Name of the resource group to create/use"
+# variable "resource_group_name" {
+#   type        = string
+#   description = "Name of the resource group to create/use"
 
-}
+# }
 
 variable "cluster_name" {
   type        = string

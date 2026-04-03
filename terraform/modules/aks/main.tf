@@ -1,12 +1,12 @@
 resource "azurerm_kubernetes_cluster" "aks" {
-  name                = var.cluster_name
+  name                = var.name_prefix == "" ? "aks" : "${var.name_prefix}-aks"
   dns_prefix          = "${var.name_prefix}-dns"
   location            = var.location
-  resource_group_name = var.rg_name
+  resource_group_name = var.resource_group_name
 
 
-  oidc_issuer_enabled        = true
-  workload_identity_enabled  = true
+  oidc_issuer_enabled       = true
+  workload_identity_enabled = true
 
   default_node_pool {
     name       = "nodepool1"
@@ -17,12 +17,10 @@ resource "azurerm_kubernetes_cluster" "aks" {
   identity {
     type = "SystemAssigned"
   }
-}
 
-output "name" {
-  value = azurerm_kubernetes_cluster.aks.name
-}
 
-output "kubelet_identity_object_id" {
-  value = azurerm_kubernetes_cluster.aks.kubelet_identity[0].object_id
+  key_vault_secrets_provider {
+    secret_rotation_enabled  = true
+    secret_rotation_interval = "2m"
+  }
 }
