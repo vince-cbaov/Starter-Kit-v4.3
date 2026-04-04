@@ -41,7 +41,7 @@ resource "azurerm_role_assignment" "workload_kv_access" {
 
 # --- UAMI ACCESS (if not using workload identity)
 resource "azurerm_role_assignment" "uami_kv_secrets_user" {
-  scope                = azurerm_key_vault.kv.id
+  scope                = local.kv_id
   role_definition_name = "Key Vault Secrets User"
   principal_id         = azurerm_user_assigned_identity.myapp.principal_id
 }

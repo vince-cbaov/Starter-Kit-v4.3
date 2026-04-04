@@ -54,6 +54,7 @@ module "aks" {
   name_prefix         = var.name_prefix
   dns_prefix          = var.dns_prefix
   node_vm_size        = "Standard_DS2_v2"
+
 }
 
 # ---- ACR Pull for kubelet identity ----
@@ -90,9 +91,9 @@ module "kv" {
   location            = module.rg.location
   name_prefix         = var.name_prefix
 
-  # THIS IS THE CRITICAL FIX
-  # AKS Workload Identity principal ID passed in
   workload_identity_principal_id = module.aks.workload_identity_principal_id
+  workload_identity_client_id    = module.aks.workload_identity_client_id
+  workload_identity_id           = module.aks.workload_identity_id
 
   create_key_vault = true
 

@@ -57,7 +57,10 @@ variable "workload_identity_principal_id" {
   description = "Principal ID of the AKS workload identity."
 }
 
-# variable "key_vault_id_effective" {
-#   type        = string
-#   description = "Effective Key Vault ID after creation or selection."
-# }
+variable "workload_identity_client_id" {
+  type = string
+}
+
+variable "workload_identity_id" {
+  type = string
+}
