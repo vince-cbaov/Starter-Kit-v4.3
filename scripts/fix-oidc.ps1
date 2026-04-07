@@ -12,7 +12,7 @@
 #>
 
 Write-Host "== Running AKS OIDC Workload Identity Auto-Repair ==" -ForegroundColor Cyan
-
+word
 # ----------------------------
 # CONFIG
 # ----------------------------
