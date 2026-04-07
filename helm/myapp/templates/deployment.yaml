@@ -7,23 +7,37 @@ spec:
   selector:
     matchLabels:
       app: myapp
+
   template:
     metadata:
       labels:
         app: myapp
+        azure.workload.identity/use: "true"
+
     spec:
+      serviceAccountName: myapp-sa
+
+      # nodeSelector / tolerations belong here (NOT inside volumeAttributes)
+      nodeSelector:
+        kubernetes.io/os: linux
+        agentpool: nodepool1
+
+      tolerations:
+        - operator: Exists
+
       volumes:
         - name: kv-secrets
           csi:
-            driver: secrets-store.csi.x-k8s.io
+            driver: secrets-store.csi.k8s.io
             readOnly: true
             volumeAttributes:
-              secretProviderClass: akv-secrets
+              secretProviderClass: akv-secrets   # ONLY valid entry
 
       containers:
         - name: myapp
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+
           ports:
             - containerPort: 80
 

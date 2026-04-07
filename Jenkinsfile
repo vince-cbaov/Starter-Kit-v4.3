@@ -1,90 +1,90 @@
 pipeline {
   agent any
 
-  options {
-    // Fail fast if any command errors inside a stage using set -e
-    skipDefaultCheckout(true)
-    timestamps()
-  }
-
   environment {
-    IMAGE_NAME = "starterkit"
-  }
-
-  parameters {
-    string(name: 'KV_URL', defaultValue: '', description: 'Azure Key Vault URL, e.g. https://<kvname>.vault.azure.net/')
-    string(name: 'DOCKER_SERVER_IP', defaultValue: '', description: 'Docker VM public IP for DOCKER_HOST tcp://<ip>:2375')
+    ACR_NAME    = "starterkitacr"
+    IMAGE_NAME  = "myapp"
+    AKS_RG      = "sk-dev2-rg"
+    AKS_NAME    = "sk-dev2-aks"
+    HELM_CHART  = "helm/myapp"
+    NAMESPACE   = "default"
+    IMAGE_TAG   = "${BUILD_NUMBER}"
   }
 
   stages {
-    stage('Fetch Secrets from Key Vault') {
-      steps {
-        script {
-          if (!params.KV_URL?.trim()) { error 'KV_URL parameter not set.' }
-        }
-        // Ensure you have the Azure Key Vault plugin configured and a Jenkins credential with ID 'azure-sp'
-        azureKeyVault(
-          credentialId: 'azure-sp',              // << note: credentialId (lowercase 'd')
-          keyVaultURL: params.KV_URL,
-          secrets: [
-            [name: 'acr-sp-app-id', envVariable: 'ACR_USERNAME'],
-            [name: 'acr-sp-secret', envVariable: 'ACR_PASSWORD'],
-            [name: 'acr-name',      envVariable: 'ACR_NAME']
-          ]
-        )
-        sh 'echo "Fetched ACR creds for $ACR_NAME from Key Vault"'
-      }
-    }
-
     stage('Checkout') {
-      steps { checkout scm }
+      steps {
+        git branch: 'main', url: 'https://github.com/<your-org>/<your-repo>.git'
+      }
     }
 
-    stage('Build on Docker VM') {
+    stage('Azure Login') {
       steps {
-        script {
-          if (!params.DOCKER_SERVER_IP?.trim()) { error 'Set DOCKER_SERVER_IP parameter.' }
-        }
-        withEnv(["DOCKER_HOST=tcp://${DOCKER_SERVER_IP}:2375"]) {
+        withCredentials([
+          string(credentialsId: 'azure-sp-client-id', variable: 'AZ_CLIENT_ID'),
+          string(credentialsId: 'azure-sp-client-secret', variable: 'AZ_CLIENT_SECRET'),
+          string(credentialsId: 'azure-sp-tenant-id', variable: 'AZ_TENANT_ID')
+        ]) {
           sh '''
-            set -e
-            docker version
-            docker build -t $ACR_NAME.azurecr.io/$IMAGE_NAME:${GIT_COMMIT} app/
+            az login --service-principal \
+              -u $AZ_CLIENT_ID \
+              -p $AZ_CLIENT_SECRET \
+              --tenant $AZ_TENANT_ID
           '''
         }
       }
     }
 
-    stage('ACR Login & Push') {
+    stage('ACR Login') {
       steps {
-        withEnv(["DOCKER_HOST=tcp://${DOCKER_SERVER_IP}:2375"]) {
+        withCredentials([
+          usernamePassword(
+            credentialsId: 'acr-credentials',
+            usernameVariable: 'ACR_USER',
+            passwordVariable: 'ACR_PASS'
+          )
+        ]) {
           sh '''
-            set -e
-            echo "$ACR_PASSWORD" | docker login "$ACR_NAME.azurecr.io" -u "$ACR_USERNAME" --password-stdin
-            docker push "$ACR_NAME.azurecr.io/$IMAGE_NAME:${GIT_COMMIT}"
-            docker tag  "$ACR_NAME.azurecr.io/$IMAGE_NAME:${GIT_COMMIT}" "$ACR_NAME.azurecr.io/$IMAGE_NAME:latest"
-            docker push "$ACR_NAME.azurecr.io/$IMAGE_NAME:latest"
+            docker login $ACR_NAME.azurecr.io \
+              -u $ACR_USER -p $ACR_PASS
           '''
         }
       }
     }
 
-    stage('Helm Deploy') {
+    stage('Build Image') {
       steps {
-        // Requires kubectl/helm and a kubeconfig on the agent
         sh '''
-          set -e
-          helm upgrade --install myapp helm/myapp \
-            --namespace starterkit --create-namespace \
-            --set image.repository="$ACR_NAME.azurecr.io/$IMAGE_NAME" \
-            --set image.tag="${GIT_COMMIT}"
+          docker build \
+            -t $ACR_NAME.azurecr.io/$IMAGE_NAME:$IMAGE_TAG \
+            .
         '''
       }
     }
 
-    stage('Rollout Status') {
+    stage('Push Image') {
       steps {
-        sh 'kubectl rollout status deploy/myapp -n starterkit'
+        sh '''
+          docker push \
+            $ACR_NAME.azurecr.io/$IMAGE_NAME:$IMAGE_TAG
+        '''
+      }
+    }
+
+    stage('Deploy to AKS') {
+      steps {
+        sh '''
+          az aks get-credentials \
+            --resource-group $AKS_RG \
+            --name $AKS_NAME \
+            --overwrite-existing
+
+          helm upgrade --install myapp $HELM_CHART \
+            --namespace $NAMESPACE \
+            --set replicaCount=1 \
+            --set image.repository=$ACR_NAME.azurecr.io/$IMAGE_NAME \
+            --set image.tag=$IMAGE_TAG
+        '''
       }
     }
   }

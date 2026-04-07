@@ -1,24 +1,30 @@
 # Root Composition
 data "azurerm_subscription" "current" {}
+data "azurerm_client_config" "current" {}
 
-
-# Foundational modules
+# --------------------
+# Resource Group
+# --------------------
 module "rg" {
   source   = "./modules/resource_group"
   name     = var.name_prefix == "" ? "rg" : "${var.name_prefix}-rg"
   location = var.location
 }
 
+# --------------------
+# Network
+# --------------------
 module "network" {
-  source      = "./modules/network"
-  rg_name     = module.rg.name
-  location    = module.rg.location
-  name_prefix = var.name_prefix
-
-  # NEW: pass the same trusted CIDR you use for compute
-  trusted_cidr = "45.159.88.70/32"
+  source       = "./modules/network"
+  rg_name      = module.rg.name
+  location     = module.rg.location
+  name_prefix  = var.name_prefix
+  trusted_cidr = "95.214.228.70/32"
 }
 
+# --------------------
+# ACR
+# --------------------
 module "acr" {
   source        = "./modules/acr"
   rg_name       = module.rg.name
@@ -28,6 +34,9 @@ module "acr" {
   name_override = var.acr_name
 }
 
+# --------------------
+# Monitoring
+# --------------------
 module "monitoring" {
   source      = "./modules/monitoring"
   rg_name     = module.rg.name
@@ -35,15 +44,29 @@ module "monitoring" {
   name_prefix = var.name_prefix
 }
 
-module "aks" {
-  source       = "./modules/aks"
-  rg_name      = module.rg.name
-  location     = module.rg.location
-  name_prefix  = var.name_prefix
-  node_vm_size = "Standard_DS2_v2"
+# Identity Module (creates UAMI)
+module "identity" {
+  source              = "./modules/identity"
+  name_prefix         = var.name_prefix
+  resource_group_name = module.rg.name
+  location            = module.rg.location
+  issuer              = module.aks.oidc_issuer_url
+  subject             = "system:serviceaccount:default:myapp-sa"
 }
 
-# ---- AcrPull for the kubelet identity ----
+# --------------------
+# AKS (OIDC ENABLED)
+# --------------------
+module "aks" {
+  source              = "./modules/aks"
+  resource_group_name = module.rg.name
+  location            = module.rg.location
+  name_prefix         = var.name_prefix
+  dns_prefix          = var.dns_prefix
+  node_vm_size        = "Standard_DS2_v2"
+}
+
+# ---- ACR Pull for kubelet identity ----
 resource "azurerm_role_assignment" "aks_acr_pull" {
   scope                            = module.acr.acr_id
   role_definition_name             = "AcrPull"
@@ -52,8 +75,9 @@ resource "azurerm_role_assignment" "aks_acr_pull" {
   depends_on                       = [module.aks, module.acr]
 }
 
-
-# Compute (reuse shared NSG from network)
+# --------------------
+# Compute
+# --------------------
 module "compute" {
   source           = "./modules/compute"
   create_vms       = var.create_vms
@@ -64,67 +88,61 @@ module "compute" {
   subnet_id        = module.network.subnet_id
   admin_username   = var.admin_username
   ssh_public_key   = var.ssh_public_key
-
-  # Restrict inbound to your trusted endpoint
-  trusted_cidr = "45.159.88.70/32"
-
-  # Reuse NSG created in the network layer (preferred)
-
-
-  # nsg_name not needed when reusing
+  trusted_cidr     = "95.214.228.70/32"
 }
 
-
-# Key Vault + SP module (enhanced)
+# --------------------
+# Key Vault (OIDC‑BASED, NO SP)
+# --------------------
 module "kv" {
-  source      = "./modules/key_vault"
-  rg_name     = module.rg.name
-  location    = module.rg.location
-  name_prefix = var.name_prefix
+  source              = "./modules/key_vault"
+  resource_group_name = module.rg.name
+  location            = module.rg.location
+  name_prefix         = var.name_prefix
 
-  # Azure AD app/SP
-  sp_display_name = "${var.name_prefix}-spn"
+  workload_identity_principal_id = module.identity.principal_id
+  workload_identity_client_id    = module.identity.client_id
+  workload_identity_id           = module.identity.id
 
-  # Allow Terraform runner identity to write secrets (data-plane)
-  sp_object_id = var.sp_object_id
-
-  # KV behaviour (create or use existing)
   create_key_vault = true
-  # key_vault_id   = "<existing kv id>"  # if create_key_vault = false
 
-  # Secrets to seed
-  secrets         = var.secrets
-  ssh_private_key = var.ssh_private_key
-
-  # Optional extra read identities
+  secrets           = var.secrets
+  ssh_private_key   = var.ssh_private_key
   access_object_ids = var.access_object_ids
-
-  # RBAC propagation wait
   rbac_wait_seconds = 60
-
-  # === SP management-plane roles ===
-  # Scope to assign roles at (choose one):
-  # sp_role_assignment_scope = module.rg.id                       # narrow: RG scope
-  sp_role_assignment_scope = data.azurerm_subscription.current.id # broad: subscription scope
-
-  assign_contributor       = true
-  assign_user_access_admin = true
-  extra_role_assignments   = var.extra_role_assignments
 }
 
+# --------------------
+# AKV CSI SecretProviderClass (OIDC / Workload Identity)
+# --------------------
 
-# Convenience outputs (like example)
-output "client_id" {
-  value       = module.kv.application_id
-  description = "Client ID of the created Azure AD application."
+
+resource "kubectl_manifest" "secretproviderclass" {
+  yaml_body = templatefile(
+    "${path.root}/../k8s/csi/secretproviderclass.yaml.tftpl",
+    {
+      # MUST be the workload identity CLIENT ID
+      client_id     = module.identity.client_id
+      tenant_id     = data.azurerm_client_config.current.tenant_id
+      keyvault_name = module.kv.kv_name
+    }
+  )
+
+  depends_on = [
+    module.aks,
+    module.kv
+  ]
 }
 
-output "secret_name" {
-  value       = module.kv.client_secret_name
-  description = "Name of the KV secret holding the client secret."
-}
-
+# --------------------
+# Outputs
+# --------------------
 output "key_vault_id" {
   value       = module.kv.kv_id
   description = "Resource ID of the Key Vault in use."
+}
+
+output "workload_identity_client_id" {
+  value       = module.identity.client_id
+  description = "Client ID used by AKS Workload Identity."
 }

@@ -10,6 +10,10 @@ output "rg_name" {
   value = module.rg.name
 }
 
+# output "id" {
+#   value = azurerm_resource_group.rg.id
+# }
+
 output "rg_location" {
   value = module.rg.location
 }
@@ -32,4 +36,9 @@ output "docker_vm_ip" {
 
 output "jenkins_vm_ip" {
   value = module.compute.jenkins_public_ip
+}
+
+output "kube_config" {
+  value     = module.aks.kube_config
+  sensitive = true
 }

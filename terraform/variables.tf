@@ -101,3 +101,19 @@ variable "tenant_id" {
   type        = string
   description = "Azure Tenant ID (for CSI driver configuration)"
 }
+
+# variable "resource_group_name" {
+#   type        = string
+#   description = "Name of the resource group to create/use"
+
+# }
+
+variable "cluster_name" {
+  type        = string
+  description = "Name of the AKS cluster to create"
+}
+
+variable "dns_prefix" {
+  type        = string
+  description = "DNS prefix for the AKS cluster"
+}
