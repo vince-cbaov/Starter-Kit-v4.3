@@ -11,14 +11,15 @@ pipeline {
     IMAGE_TAG   = "${BUILD_NUMBER}"
   }
 
-  stage('Checkout Code') {
-  steps {
-    git branch: 'main',
-        credentialsId: 'github-credentials',
-        url: 'https://github.com/vince-cbaov/Starter-Kit-v4.3.git'
-  }
-}
+  stages {
 
+    stage('Checkout Code') {
+      steps {
+        git branch: 'main',
+            credentialsId: 'github-credentials',
+            url: 'https://github.com/vince-cbaov/Starter-Kit-v4.3.git'
+      }
+    }
 
     stage('Azure Login') {
       steps {
@@ -89,5 +90,6 @@ pipeline {
         '''
       }
     }
+
   }
 }
