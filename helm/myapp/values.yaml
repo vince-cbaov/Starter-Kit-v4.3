@@ -22,4 +22,4 @@ azure:
   tenantID: ""
   keyVaultName: ""
 workloadIdentity:
-  clientId: "341c8ac0-d6be-43c0-943d-05a98f5e5099"
+  clientId: "671d011e-58ea-4250-a60c-a6d001626290"
