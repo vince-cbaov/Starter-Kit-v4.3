@@ -11,7 +11,7 @@
       - Optionally restarts workload
 #>
 
-Write-Host "=== Running AKS OIDC Workload Identity Auto-Repair ===" -ForegroundColor Cyan
+Write-Host "== Running AKS OIDC Workload Identity Auto-Repair ==" -ForegroundColor Cyan
 
 # ----------------------------
 # CONFIG
