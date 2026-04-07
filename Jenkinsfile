@@ -54,6 +54,7 @@ stage('Build & Push Image (Docker VM)') {
           AZ_CLIENT_ID="$AZ_CLIENT_ID" \
           AZ_CLIENT_SECRET="$AZ_CLIENT_SECRET" \
           AZ_TENANT_ID="$AZ_TENANT_ID" \
+          IMAGE_TAG="$IMAGE_TAG" \
           bash -s <<'EOF'
         set -e
 
@@ -69,11 +70,11 @@ stage('Build & Push Image (Docker VM)') {
 
         cd ~/Starter-Kit-v4.3
 
-        echo "Building image..."
-        docker build -t starterkitacr.azurecr.io/myapp:${IMAGE_TAG} .
+        echo "Building image with tag: $IMAGE_TAG"
+        docker build -t starterkitacr.azurecr.io/myapp:$IMAGE_TAG .
 
         echo "Pushing image..."
-        docker push starterkitacr.azurecr.io/myapp:${IMAGE_TAG}
+        docker push starterkitacr.azurecr.io/myapp:$IMAGE_TAG
         EOF
       '''
     }
