@@ -58,25 +58,6 @@ pipeline {
   }
 }
 
-    stage('Build Image') {
-      steps {
-        sh '''
-          docker build \
-            -t $ACR_NAME.azurecr.io/$IMAGE_NAME:$IMAGE_TAG \
-            .
-        '''
-      }
-    }
-
-    stage('Push Image') {
-      steps {
-        sh '''
-          docker push \
-            $ACR_NAME.azurecr.io/$IMAGE_NAME:$IMAGE_TAG
-        '''
-      }
-    }
-
     stage('Deploy to AKS') {
       steps {
         sh '''
