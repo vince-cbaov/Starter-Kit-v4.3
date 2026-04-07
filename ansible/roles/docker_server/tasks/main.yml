@@ -1,5 +1,9 @@
 ---
-# Install Docker and enable TLS-secured remote API on 2376
+# Docker host configuration
+# - Install Docker
+# - Disable Docker Remote API entirely
+# - Use local Unix socket only
+# - Designed for Jenkins → SSH → docker build
 
 - name: Ensure apt cache is up to date
   apt:
@@ -13,90 +17,19 @@
     state: present
   become: true
 
-# --- TLS certificate directory ---
-
-- name: Create Docker TLS directory
-  file:
-    path: /etc/docker/ssl
-    state: directory
-    owner: root
-    group: root
-    mode: "0700"
+- name: Ensure Docker service is enabled
+  systemd:
+    name: docker
+    enabled: true
+    state: started
   become: true
 
-# CA private key
-- name: Create CA private key
-  command: openssl genrsa -out /etc/docker/ssl/ca-key.pem 4096
-  args:
-    creates: /etc/docker/ssl/ca-key.pem
-  become: true
+# -------------------------------------------------
+# Configure Docker to use LOCAL SOCKET ONLY
+# (No TCP sockets, no TLS, no remote API)
+# -------------------------------------------------
 
-# CA certificate
-- name: Create CA certificate
-  command: >
-    openssl req -new -x509 -days 3650
-    -key /etc/docker/ssl/ca-key.pem
-    -subj "/CN=docker-ca"
-    -out /etc/docker/ssl/ca.pem
-  args:
-    creates: /etc/docker/ssl/ca.pem
-  become: true
-
-# Server key
-- name: Create server key
-  command: openssl genrsa -out /etc/docker/ssl/server-key.pem 4096
-  args:
-    creates: /etc/docker/ssl/server-key.pem
-  become: true
-
-# Server CSR
-- name: Create server CSR
-  command: >
-    openssl req -subj "/CN={{ inventory_hostname }}"
-    -new -key /etc/docker/ssl/server-key.pem
-    -out /etc/docker/ssl/server.csr
-  args:
-    creates: /etc/docker/ssl/server.csr
-  become: true
-
-# Sign certificate
-- name: Sign server certificate
-  command: >
-    openssl x509 -req -days 825
-    -in /etc/docker/ssl/server.csr
-    -CA /etc/docker/ssl/ca.pem
-    -CAkey /etc/docker/ssl/ca-key.pem
-    -CAcreateserial
-    -out /etc/docker/ssl/server-cert.pem
-  args:
-    creates: /etc/docker/ssl/server-cert.pem
-  become: true
-
-# Tighten permissions on private keys; public certs world-readable
-- name: Set private key permissions
-  file:
-    path: "{{ item }}"
-    owner: root
-    group: root
-    mode: "0600"
-  loop:
-    - /etc/docker/ssl/ca-key.pem
-    - /etc/docker/ssl/server-key.pem
-  become: true
-
-- name: Set public cert permissions
-  file:
-    path: "{{ item }}"
-    owner: root
-    group: root
-    mode: "0644"
-  loop:
-    - /etc/docker/ssl/ca.pem
-    - /etc/docker/ssl/server-cert.pem
-  become: true
-
-# --- Configure Docker daemon to use TLS on 2376 ---
-- name: Configure Docker daemon for TLS
+- name: Configure Docker daemon (local socket only)
   copy:
     dest: /etc/docker/daemon.json
     owner: root
@@ -104,15 +37,14 @@
     mode: "0644"
     content: |
       {
-        "hosts": ["unix:///var/run/docker.sock", "tcp://0.0.0.0:2376"],
-        "tlsverify": true,
-        "tlscacert": "/etc/docker/ssl/ca.pem",
-        "tlscert": "/etc/docker/ssl/server-cert.pem",
-        "tlskey": "/etc/docker/ssl/server-key.pem"
+        "hosts": ["unix:///var/run/docker.sock"]
       }
   become: true
 
-# ---------- SYSTEMD OVERRIDE TO REMOVE -H fd:// ----------
+# -------------------------------------------------
+# Ensure Docker uses daemon.json and not fd://
+# -------------------------------------------------
+
 - name: Ensure systemd drop-in directory exists
   file:
     path: /etc/systemd/system/docker.service.d
@@ -132,45 +64,41 @@
       [Service]
       ExecStart=
       ExecStart=/usr/bin/dockerd
-  notify: reload systemd
   become: true
 
-# Optional: validate the JSON early so failures are clear
+# -------------------------------------------------
+# Validate configuration before restart
+# -------------------------------------------------
+
 - name: Validate /etc/docker/daemon.json
   shell: "python3 -m json.tool /etc/docker/daemon.json > /dev/null"
-  register: daemon_json_check
   changed_when: false
   become: true
 
-# Restart Docker with daemon_reload and show diagnostics if it fails
+# -------------------------------------------------
+# Restart Docker cleanly
+# -------------------------------------------------
+
 - name: Restart Docker
   systemd:
     name: docker
     state: restarted
-    enabled: true
     daemon_reload: true
-  register: docker_restart
   become: true
 
-- name: Show docker status on failure
-  command: systemctl status docker --no-pager -l
-  when: docker_restart is failed
-  register: docker_status
-  failed_when: false
+# -------------------------------------------------
+# Post-checks (fail fast if remote API is exposed)
+# -------------------------------------------------
+
+- name: Assert Docker Remote API is disabled
+  shell: "ss -lntp | egrep ':(2375|2376)' || true"
+  register: docker_api_ports
   changed_when: false
   become: true
 
-- name: Show docker journal on failure
-  command: bash -lc "journalctl -xeu docker.service --no-pager | tail -n 200"
-  when: docker_restart is failed
-  register: docker_journal
-  failed_when: false
-  changed_when: false
-  become: true
-
-- name: Debug docker failure
-  debug:
-    msg:
-      - "{{ docker_status.stdout | default('no status') }}"
-      - "{{ docker_journal.stdout | default('no journal') }}"
-  when: docker_restart is failed
+- name: Fail if Docker Remote API ports are open
+  fail:
+    msg: >
+      SECURITY ERROR: Docker Remote API is listening on TCP ports
+      (2375/2376). This host must use SSH + local socket only.
+  when: docker_api_ports.stdout != ""

@@ -38,22 +38,31 @@ pipeline {
       }
     }
 
-  stage('Build & Push Image (Docker Server)') {
-    steps {
-      withCredentials([
-       usernamePassword(
-        credentialsId: 'acr-credentials',
-        usernameVariable: 'ACR_USER',
-        passwordVariable: 'ACR_PASS'
-      )
+ stage('Build & Push Image (Docker VM)') {
+  steps {
+    withCredentials([
+      string(credentialsId: 'azure-sp-client-id', variable: 'AZ_CLIENT_ID'),
+      string(credentialsId: 'azure-sp-client-secret', variable: 'AZ_CLIENT_SECRET'),
+      string(credentialsId: 'azure-sp-tenant-id', variable: 'AZ_TENANT_ID')
     ]) {
-      sh """
+      sh '''
         ssh vinadmin@10.10.1.5 '
-          docker login starterkitacr.azurecr.io -u ${ACR_USER} -p ${ACR_PASS} &&
-          docker build -t starterkitacr.azurecr.io/myapp:${IMAGE_TAG} . &&
-          docker push starterkitacr.azurecr.io/myapp:${IMAGE_TAG}
+          set -e
+
+          az login \
+            --service-principal \
+            -u '"$AZ_CLIENT_ID"' \
+            -p '"$AZ_CLIENT_SECRET"' \
+            --tenant '"$AZ_TENANT_ID"'
+
+          az acr login --name starterkitacr
+
+          cd ~/Starter-Kit-v4.3
+
+          docker build -t starterkitacr.azurecr.io/myapp:'"$BUILD_NUMBER"' .
+          docker push starterkitacr.azurecr.io/myapp:'"$BUILD_NUMBER"'
         '
-      """
+      '''
     }
   }
 }

@@ -37,6 +37,5 @@
   roles:
     - hardening
     - docker_server
-    - docker
     - jenkins
     - jcasc
