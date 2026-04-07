@@ -55,31 +55,32 @@ stage('Build & Push Image (Docker VM)') {
           AZ_CLIENT_SECRET="$AZ_CLIENT_SECRET" \
           AZ_TENANT_ID="$AZ_TENANT_ID" \
           IMAGE_TAG="$IMAGE_TAG" \
-          bash -s <<'EOF'
-        set -e
+          bash -lc "
+            set -e
 
-        echo "Logging into Azure on Docker VM..."
-        az login \
-          --service-principal \
-          -u "$AZ_CLIENT_ID" \
-          -p "$AZ_CLIENT_SECRET" \
-          --tenant "$AZ_TENANT_ID"
+            echo 'Logging into Azure on Docker VM...'
+            az login \
+              --service-principal \
+              -u \\\"$AZ_CLIENT_ID\\\" \
+              -p \\\"$AZ_CLIENT_SECRET\\\" \
+              --tenant \\\"$AZ_TENANT_ID\\\"
 
-        echo "Logging into ACR..."
-        az acr login --name starterkitacr
+            echo 'Logging into ACR...'
+            az acr login --name starterkitacr
 
-        cd ~/Starter-Kit-v4.3
+            cd ~/Starter-Kit-v4.3
 
-        echo "Building image with tag: $IMAGE_TAG"
-        docker build -t starterkitacr.azurecr.io/myapp:$IMAGE_TAG .
+            echo 'Building image with tag: $IMAGE_TAG'
+            docker build -t starterkitacr.azurecr.io/myapp:$IMAGE_TAG .
 
-        echo "Pushing image..."
-        docker push starterkitacr.azurecr.io/myapp:$IMAGE_TAG
-        EOF
+            echo 'Pushing image...'
+            docker push starterkitacr.azurecr.io/myapp:$IMAGE_TAG
+          "
       '''
     }
   }
 }
+
 
 
     stage('Deploy to AKS') {
