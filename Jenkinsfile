@@ -67,22 +67,38 @@ pipeline {
   }
 }
 
-    stage('Deploy to AKS') {
-      steps {
-        sh '''
-          az aks get-credentials \
-            --resource-group $AKS_RG \
-            --name $AKS_NAME \
-            --overwrite-existing
+stage('Deploy to AKS') {
+  steps {
+    withCredentials([
+      string(credentialsId: 'azure-sp-client-id', variable: 'AZ_CLIENT_ID'),
+      string(credentialsId: 'azure-sp-client-secret', variable: 'AZ_CLIENT_SECRET'),
+      string(credentialsId: 'azure-sp-tenant-id', variable: 'AZ_TENANT_ID')
+    ]) {
+      sh '''
+        set -e
 
-          helm upgrade --install myapp $HELM_CHART \
-            --namespace $NAMESPACE \
-            --set replicaCount=1 \
-            --set image.repository=$ACR_NAME.azurecr.io/$IMAGE_NAME \
-            --set image.tag=$IMAGE_TAG
-        '''
-      }
+        echo "Logging into Azure..."
+        az login \
+          --service-principal \
+          -u "$AZ_CLIENT_ID" \
+          -p "$AZ_CLIENT_SECRET" \
+          --tenant "$AZ_TENANT_ID"
+
+        echo "Getting AKS credentials..."
+        az aks get-credentials \
+          --resource-group "$AKS_RG" \
+          --name "$AKS_NAME" \
+          --overwrite-existing
+
+        echo "Deploying application with Helm..."
+        helm upgrade --install myapp "$HELM_CHART" \
+          --namespace "$NAMESPACE" \
+          --create-namespace \
+          --set replicaCount=1 \
+          --set image.repository="$ACR_NAME.azurecr.io/$IMAGE_NAME" \
+          --set image.tag="$IMAGE_TAG" \
+          --wait
+      '''
     }
-
   }
 }
