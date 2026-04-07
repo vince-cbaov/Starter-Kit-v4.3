@@ -24,3 +24,4 @@ resource "azurerm_kubernetes_cluster" "aks" {
     secret_rotation_interval = "2m"
   }
 }
+

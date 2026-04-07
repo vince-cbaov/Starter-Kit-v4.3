@@ -2,6 +2,7 @@ image:
   repository: starterkitacr.azurecr.io/myapp
   tag: v1
   pullPolicy: IfNotPresent
+  
 service:
   type: LoadBalancer
   port: 80
@@ -21,4 +22,4 @@ azure:
   tenantID: ""
   keyVaultName: ""
 workloadIdentity:
-  clientId: "<CLIENT_ID_FROM_TERRAFORM_OUTPUT>"
+  clientId: "341c8ac0-d6be-43c0-943d-05a98f5e5099"

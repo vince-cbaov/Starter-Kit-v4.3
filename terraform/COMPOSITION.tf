@@ -19,7 +19,7 @@ module "network" {
   rg_name      = module.rg.name
   location     = module.rg.location
   name_prefix  = var.name_prefix
-  trusted_cidr = "45.159.88.70/32"
+  trusted_cidr = "95.214.228.70/32"
 }
 
 # --------------------
@@ -44,6 +44,16 @@ module "monitoring" {
   name_prefix = var.name_prefix
 }
 
+# Identity Module (creates UAMI)
+module "identity" {
+  source              = "./modules/identity"
+  name_prefix         = var.name_prefix
+  resource_group_name = module.rg.name
+  location            = module.rg.location
+  issuer              = module.aks.oidc_issuer_url
+  subject             = "system:serviceaccount:default:myapp-sa"
+}
+
 # --------------------
 # AKS (OIDC ENABLED)
 # --------------------
@@ -54,7 +64,6 @@ module "aks" {
   name_prefix         = var.name_prefix
   dns_prefix          = var.dns_prefix
   node_vm_size        = "Standard_DS2_v2"
-
 }
 
 # ---- ACR Pull for kubelet identity ----
@@ -79,7 +88,7 @@ module "compute" {
   subnet_id        = module.network.subnet_id
   admin_username   = var.admin_username
   ssh_public_key   = var.ssh_public_key
-  trusted_cidr     = "45.159.88.70/32"
+  trusted_cidr     = "95.214.228.70/32"
 }
 
 # --------------------
@@ -91,9 +100,9 @@ module "kv" {
   location            = module.rg.location
   name_prefix         = var.name_prefix
 
-  workload_identity_principal_id = module.aks.workload_identity_principal_id
-  workload_identity_client_id    = module.aks.workload_identity_client_id
-  workload_identity_id           = module.aks.workload_identity_id
+  workload_identity_principal_id = module.identity.principal_id
+  workload_identity_client_id    = module.identity.client_id
+  workload_identity_id           = module.identity.id
 
   create_key_vault = true
 
@@ -106,32 +115,25 @@ module "kv" {
 # --------------------
 # AKV CSI SecretProviderClass (OIDC / Workload Identity)
 # --------------------
-resource "kubectl_manifest" "starterkit_namespace" {
-  yaml_body = <<YAML
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: starterkit
-YAML
-}
+
 
 resource "kubectl_manifest" "secretproviderclass" {
   yaml_body = templatefile(
     "${path.root}/../k8s/csi/secretproviderclass.yaml.tftpl",
     {
       # MUST be the workload identity CLIENT ID
-      client_id     = module.aks.workload_identity_client_id
+      client_id     = module.identity.client_id
       tenant_id     = data.azurerm_client_config.current.tenant_id
       keyvault_name = module.kv.kv_name
     }
   )
 
   depends_on = [
-    kubectl_manifest.starterkit_namespace,
     module.aks,
     module.kv
   ]
 }
+
 # --------------------
 # Outputs
 # --------------------
@@ -141,6 +143,6 @@ output "key_vault_id" {
 }
 
 output "workload_identity_client_id" {
-  value       = module.aks.workload_identity_client_id
+  value       = module.identity.client_id
   description = "Client ID used by AKS Workload Identity."
 }
