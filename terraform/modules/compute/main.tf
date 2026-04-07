@@ -59,18 +59,31 @@ resource "azurerm_network_security_group" "shared_nsg" {
   location            = var.location
   resource_group_name = var.rg_name
 
-  # SSH (22)
-  security_rule {
-    name                       = "ssh"
-    priority                   = 1001
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "22"
-    source_address_prefixes    = [var.trusted_cidr]
-    destination_address_prefix = "*"
-  }
+  # SSH from Virtual Network (Jenkins → Docker)
+security_rule {
+  name                       = "ssh-from-vnet"
+  priority                   = 1000
+  direction                  = "Inbound"
+  access                     = "Allow"
+  protocol                   = "Tcp"
+  source_port_range          = "*"
+  destination_port_range     = "22"
+  source_address_prefix      = "VirtualNetwork"
+  destination_address_prefix = "*"
+}
+
+# SSH from trusted public IP (admin access)
+security_rule {
+  name                       = "ssh"
+  priority                   = 1001
+  direction                  = "Inbound"
+  access                     = "Allow"
+  protocol                   = "Tcp"
+  source_port_range          = "*"
+  destination_port_range     = "22"
+  source_address_prefixes    = [var.trusted_cidr]
+  destination_address_prefix = "*"
+}
 
   # Jenkins UI (8080)
   security_rule {

@@ -38,22 +38,25 @@ pipeline {
       }
     }
 
-    stage('ACR Login') {
-      steps {
-        withCredentials([
-          usernamePassword(
-            credentialsId: 'acr-credentials',
-            usernameVariable: 'ACR_USER',
-            passwordVariable: 'ACR_PASS'
-          )
-        ]) {
-          sh '''
-            docker login $ACR_NAME.azurecr.io \
-              -u $ACR_USER -p $ACR_PASS
-          '''
-        }
-      }
+  stage('Build & Push Image (Docker Server)') {
+    steps {
+      withCredentials([
+       usernamePassword(
+        credentialsId: 'acr-credentials',
+        usernameVariable: 'ACR_USER',
+        passwordVariable: 'ACR_PASS'
+      )
+    ]) {
+      sh """
+        ssh vinadmin@10.10.1.5 '
+          docker login starterkitacr.azurecr.io -u ${ACR_USER} -p ${ACR_PASS} &&
+          docker build -t starterkitacr.azurecr.io/myapp:${IMAGE_TAG} . &&
+          docker push starterkitacr.azurecr.io/myapp:${IMAGE_TAG}
+        '
+      """
     }
+  }
+}
 
     stage('Build Image') {
       steps {
