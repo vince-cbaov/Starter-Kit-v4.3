@@ -50,7 +50,7 @@ pipeline {
           sh '''
             set -e
 
-            ssh vinadmin@10.10.1.5 << EOF
+            ssh -T vinadmin@10.10.1.5 bash -s <<'EOF'
             set -e
 
             echo "Logging into Azure on Docker VM..."
