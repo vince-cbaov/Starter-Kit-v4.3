@@ -57,7 +57,7 @@ stage('Build & Push Image (Docker VM)') {
             AZ_CLIENT_SECRET="${AZ_CLIENT_SECRET}" \
             AZ_TENANT_ID="${AZ_TENANT_ID}" \
             IMAGE_TAG="${IMAGE_TAG}" \
-          bash -s << EOF
+          bash -s <<-'EOF'
         set -e
 
         echo "Ensuring source code is present on Docker VM..."
