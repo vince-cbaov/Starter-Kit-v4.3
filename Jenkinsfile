@@ -62,17 +62,17 @@ stage('Build & Push Image (Docker VM)') {
 
         echo "Ensuring source code is present on Docker VM..."
 
-        if [ ! -d "/home/vinadmin/Starter-Kit-v4.3/.git" ]; then
+        if [ ! -d "/opt/build/Starter-Kit-v4.3/.git" ]; then
           echo "Cloning repository..."
           git clone https://github.com/vince-cbaov/Starter-Kit-v4.3.git /home/vinadmin/Starter-Kit-v4.3
         else
           echo "Updating existing repository..."
-          cd /home/vinadmin/Starter-Kit-v4.3
+          cd /opt/build/Starter-Kit-v4.3
           git fetch origin
           git reset --hard origin/main
         fi
 
-        cd /home/vinadmin/Starter-Kit-v4.3
+        cd /opt/build/Starter-Kit-v4.3
 
         echo "Tenant inside Docker VM = [$AZ_TENANT_ID]"
 
