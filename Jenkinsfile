@@ -48,7 +48,9 @@ stage('Build & Push Image (Docker VM)') {
       string(credentialsId: 'azure-sp-tenant-id', variable: 'AZ_TENANT_ID')
     ]) {
       sh '''
-        ssh -i ~/.ssh/docker_server_key vinadmin@10.10.1.4 << 'EOF'
+        set -e
+
+        ssh -T -i ~/.ssh/docker_server_key vinadmin@10.10.1.4 << EOF
         set -e
 
         export AZ_CLIENT_ID="${AZ_CLIENT_ID}"
@@ -77,8 +79,6 @@ stage('Build & Push Image (Docker VM)') {
     }
   }
 }
-
-
 
     stage('Deploy to AKS') {
       steps {
