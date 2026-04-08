@@ -86,10 +86,10 @@ stage('Build & Push Image (Docker VM)') {
         az acr login --name starterkitacr
 
         echo "Building image with tag: $IMAGE_TAG"
-        docker build -t starterkitacr.azurecr.io/myapp:$IMAGE_TAG .
+        sudo docker build -t starterkitacr.azurecr.io/myapp:$IMAGE_TAG .
 
         echo "Pushing image..."
-        docker push starterkitacr.azurecr.io/myapp:$IMAGE_TAG
+        sudo docker push starterkitacr.azurecr.io/myapp:$IMAGE_TAG
         
       '''
     }
