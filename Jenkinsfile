@@ -40,6 +40,8 @@ pipeline {
       }
     }
 
+
+
 stage('Build & Push Image (Docker VM)') {
   steps {
     withCredentials([
@@ -58,42 +60,39 @@ stage('Build & Push Image (Docker VM)') {
         export AZ_TENANT_ID="${AZ_TENANT_ID}"
         export IMAGE_TAG="${IMAGE_TAG}"
 
-        REPO_DIR="\$HOME/Starter-Kit-v4.3"
-        REPO_URL="https://github.com/vince-cbaov/Starter-Kit-v4.3.git"
-
         echo "Ensuring source code is present..."
 
-        if [ ! -d "\$REPO_DIR/.git" ]; then
+        if [ ! -d "$HOME/Starter-Kit-v4.3/.git" ]; then
           echo "Cloning repository..."
-          git clone "\$REPO_URL" "\$REPO_DIR"
+          git clone https://github.com/vince-cbaov/Starter-Kit-v4.3.git "$HOME/Starter-Kit-v4.3"
         else
           echo "Updating existing repository..."
-          cd "\$REPO_DIR"
+          cd "$HOME/Starter-Kit-v4.3"
           git fetch origin
           git reset --hard origin/main
         fi
 
-        cd "\$REPO_DIR"
+        cd "$HOME/Starter-Kit-v4.3"
 
         echo "Logging into Azure on Docker VM..."
         az login --service-principal \
-          -u "\$AZ_CLIENT_ID" \
-          -p "\$AZ_CLIENT_SECRET" \
-          --tenant "\$AZ_TENANT_ID"
+          -u "$AZ_CLIENT_ID" \
+          -p "$AZ_CLIENT_SECRET" \
+          --tenant "$AZ_TENANT_ID"
 
         echo "Logging into ACR..."
         az acr login --name starterkitacr
 
-        echo "Building image with tag: \$IMAGE_TAG"
-        docker build -t starterkitacr.azurecr.io/myapp:\$IMAGE_TAG .
+        echo "Building image with tag: $IMAGE_TAG"
+        docker build -t starterkitacr.azurecr.io/myapp:$IMAGE_TAG .
 
         echo "Pushing image..."
-        docker push starterkitacr.azurecr.io/myapp:\$IMAGE_TAG
+        docker push starterkitacr.azurecr.io/myapp:$IMAGE_TAG
         EOF
       '''
     }
   }
-}
+}    
 
     stage('Deploy to AKS') {
       steps {
