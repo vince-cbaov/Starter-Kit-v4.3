@@ -51,7 +51,7 @@ stage('Build & Push Image (Docker VM)') {
       sh '''
         set -e
 
-        ssh -T -i ~/.ssh/docker_server_key \
+        ssh -T -i ~/.ssh/docker_server_key vinadmin@10.10.1.4 \
           env \
             AZ_CLIENT_ID="${AZ_CLIENT_ID}" \
             AZ_CLIENT_SECRET="${AZ_CLIENT_SECRET}" \
