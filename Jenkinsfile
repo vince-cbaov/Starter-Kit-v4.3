@@ -64,7 +64,7 @@ stage('Build & Push Image (Docker VM)') {
 
         if [ ! -d "/opt/build/Starter-Kit-v4.3/.git" ]; then
           echo "Cloning repository..."
-          git clone https://github.com/vince-cbaov/Starter-Kit-v4.3.git /home/vinadmin/Starter-Kit-v4.3
+          git clone https://github.com/vince-cbaov/Starter-Kit-v4.3.git /opt/build/Starter-Kit-v4.3
         else
           echo "Updating existing repository..."
           cd /opt/build/Starter-Kit-v4.3
