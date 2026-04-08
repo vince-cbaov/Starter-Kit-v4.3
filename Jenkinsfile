@@ -41,7 +41,6 @@ pipeline {
       }
     }
 
-
 stage('Build & Push Image (Docker VM)') {
   steps {
     withCredentials([
@@ -52,40 +51,49 @@ stage('Build & Push Image (Docker VM)') {
       sh '''
         set -e
 
-        ssh -T -i ~/.ssh/docker_server_key vinadmin@10.10.1.4 bash -s << 'REMOTE_SCRIPT'
+        ssh -T -i ~/.ssh/docker_server_key \
+          env \
+            AZ_CLIENT_ID="${AZ_CLIENT_ID}" \
+            AZ_CLIENT_SECRET="${AZ_CLIENT_SECRET}" \
+            AZ_TENANT_ID="${AZ_TENANT_ID}" \
+            IMAGE_TAG="${IMAGE_TAG}" \
+          vinadmin@10.10.1.4 \
+          bash -s << EOF
         set -e
 
         REPO_DIR="/home/vinadmin/Starter-Kit-v4.3"
 
         echo "Ensuring source code is present on Docker VM..."
 
-        if [ ! -d "$REPO_DIR/.git" ]; then
+        if [ ! -d "\$REPO_DIR/.git" ]; then
           echo "Cloning repository..."
-          git clone https://github.com/vince-cbaov/Starter-Kit-v4.3.git "$REPO_DIR"
+          git clone https://github.com/vince-cbaov/Starter-Kit-v4.3.git "\$REPO_DIR"
         else
           echo "Updating existing repository..."
-          cd "$REPO_DIR"
+          cd "\$REPO_DIR"
           git fetch origin
           git reset --hard origin/main
         fi
 
-        cd "$REPO_DIR"
+        cd "\$REPO_DIR"
+
+        echo "Tenant inside Docker VM = [\$AZ_TENANT_ID]"
 
         echo "Logging into Azure on Docker VM..."
         az login --service-principal \
-          -u "${AZ_CLIENT_ID}" \
-          -p "${AZ_CLIENT_SECRET}" \
-          --tenant "${AZ_TENANT_ID}"
+          -u "\$AZ_CLIENT_ID" \
+          -p "\$AZ_CLIENT_SECRET" \
+          --tenant "\$AZ_TENANT_ID"
 
         echo "Logging into ACR..."
         az acr login --name starterkitacr
 
-        echo "Building image with tag: ${IMAGE_TAG}"
-        docker build -t starterkitacr.azurecr.io/myapp:${IMAGE_TAG} .
+        echo "Building image with tag: \$IMAGE_TAG"
+        docker build -t starterkitacr.azurecr.io/myapp:\$IMAGE_TAG .
 
         echo "Pushing image..."
-        docker push starterkitacr.azurecr.io/myapp:${IMAGE_TAG}
-        REMOTE_SCRIPT
+        docker push starterkitacr.azurecr.io/myapp:\$IMAGE_TAG
+        EOF
       '''
     }
   }
