@@ -48,34 +48,26 @@ stage('Build & Push Image (Docker VM)') {
       string(credentialsId: 'azure-sp-tenant-id', variable: 'AZ_TENANT_ID')
     ]) {
       sh '''
+        ssh -i ~/.ssh/docker_server_key vinadmin@10.10.1.4 << 'EOF'
         set -e
 
-        ssh -i ~/.ssh/docker_server_key vinadmin@10.10.1.4 \
-          AZ_CLIENT_ID="$AZ_CLIENT_ID" \
-          AZ_CLIENT_SECRET="$AZ_CLIENT_SECRET" \
-          AZ_TENANT_ID="$AZ_TENANT_ID" \
-          IMAGE_TAG="$IMAGE_TAG" \
-          bash -lc "
-            set -e
+        echo "Logging into Azure on Docker VM..."
+        az login --service-principal \
+          -u "$AZ_CLIENT_ID" \
+          -p "$AZ_CLIENT_SECRET" \
+          --tenant "$AZ_TENANT_ID"
 
-            echo 'Logging into Azure on Docker VM...'
-            az login \
-              --service-principal \
-              -u \\\"$AZ_CLIENT_ID\\\" \
-              -p \\\"$AZ_CLIENT_SECRET\\\" \
-              --tenant \\\"$AZ_TENANT_ID\\\"
+        echo "Logging into ACR..."
+        az acr login --name starterkitacr
 
-            echo 'Logging into ACR...'
-            az acr login --name starterkitacr
+        cd ~/Starter-Kit-v4.3
 
-            cd ~/Starter-Kit-v4.3
+        echo "Building image with tag: $IMAGE_TAG"
+        docker build -t starterkitacr.azurecr.io/myapp:$IMAGE_TAG .
 
-            echo 'Building image with tag: $IMAGE_TAG'
-            docker build -t starterkitacr.azurecr.io/myapp:$IMAGE_TAG .
-
-            echo 'Pushing image...'
-            docker push starterkitacr.azurecr.io/myapp:$IMAGE_TAG
-          "
+        echo "Pushing image..."
+        docker push starterkitacr.azurecr.io/myapp:$IMAGE_TAG
+        EOF
       '''
     }
   }
