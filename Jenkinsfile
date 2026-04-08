@@ -60,38 +60,36 @@ stage('Build & Push Image (Docker VM)') {
           bash -s << EOF
         set -e
 
-        REPO_DIR="/home/vinadmin/Starter-Kit-v4.3"
-
         echo "Ensuring source code is present on Docker VM..."
 
-        if [ ! -d "\$REPO_DIR/.git" ]; then
+        if [ ! -d "/home/vinadmin/Starter-Kit-v4.3/.git" ]; then
           echo "Cloning repository..."
-          git clone https://github.com/vince-cbaov/Starter-Kit-v4.3.git "\$REPO_DIR"
+          git clone https://github.com/vince-cbaov/Starter-Kit-v4.3.git /home/vinadmin/Starter-Kit-v4.3
         else
           echo "Updating existing repository..."
-          cd "\$REPO_DIR"
+          cd /home/vinadmin/Starter-Kit-v4.3
           git fetch origin
           git reset --hard origin/main
         fi
 
-        cd "\$REPO_DIR"
+        cd /home/vinadmin/Starter-Kit-v4.3
 
-        echo "Tenant inside Docker VM = [\$AZ_TENANT_ID]"
+        echo "Tenant inside Docker VM = [$AZ_TENANT_ID]"
 
         echo "Logging into Azure on Docker VM..."
         az login --service-principal \
-          -u "\$AZ_CLIENT_ID" \
-          -p "\$AZ_CLIENT_SECRET" \
-          --tenant "\$AZ_TENANT_ID"
+          -u "$AZ_CLIENT_ID" \
+          -p "$AZ_CLIENT_SECRET" \
+          --tenant "$AZ_TENANT_ID"
 
         echo "Logging into ACR..."
         az acr login --name starterkitacr
 
-        echo "Building image with tag: \$IMAGE_TAG"
-        docker build -t starterkitacr.azurecr.io/myapp:\$IMAGE_TAG .
+        echo "Building image with tag: $IMAGE_TAG"
+        docker build -t starterkitacr.azurecr.io/myapp:$IMAGE_TAG .
 
         echo "Pushing image..."
-        docker push starterkitacr.azurecr.io/myapp:\$IMAGE_TAG
+        docker push starterkitacr.azurecr.io/myapp:$IMAGE_TAG
         EOF
       '''
     }
