@@ -10,6 +10,10 @@
       - fontconfig
       - openjdk-21-jre
       - git
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
     state: present
     update_cache: yes
   become: true
@@ -84,3 +88,98 @@
     - "'jenkins' in group_names"
   notify: reload ufw
   become: true
+
+# -------------------------------------------------
+# Azure CLI (official Microsoft repo)
+# -------------------------------------------------
+
+- name: Ensure Azure CLI keyrings directory exists
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+  become: true
+
+- name: Download Microsoft GPG key
+  get_url:
+    url: https://packages.microsoft.com/keys/microsoft.asc
+    dest: /etc/apt/keyrings/microsoft.asc
+    mode: "0644"
+  become: true
+
+- name: Convert Microsoft GPG key to keyring
+  command: >
+    gpg --dearmor
+    --yes
+    -o /etc/apt/keyrings/microsoft.gpg
+    /etc/apt/keyrings/microsoft.asc
+  args:
+    creates: /etc/apt/keyrings/microsoft.gpg
+  become: true
+
+- name: Add Azure CLI repository
+  apt_repository:
+    repo: >
+      deb [arch=amd64 signed-by=/etc/apt/keyrings/microsoft.gpg]
+      https://packages.microsoft.com/repos/azure-cli/
+      {{ ansible_distribution_release }}
+      main
+    filename: azure-cli
+    state: present
+  become: true
+
+- name: Install Azure CLI
+  apt:
+    name: azure-cli
+    state: present
+    update_cache: true
+  become: true
+
+
+# -------------------------------------------------
+# kubectl (Snap – avoids apt repo issues)
+# -------------------------------------------------
+
+- name: Install kubectl via snap
+  snap:
+    name: kubectl
+    classic: true
+    state: present
+  become: true
+
+
+# -------------------------------------------------
+# Helm (Snap)
+# -------------------------------------------------
+
+- name: Install Helm via snap
+  snap:
+    name: helm
+    classic: true
+    state: present
+  become: true
+
+
+# -------------------------------------------------
+# Verification (fail fast)
+# -------------------------------------------------
+
+- name: Verify Java
+  command: java -version
+  changed_when: false
+
+- name: Verify Jenkins
+  command: systemctl is-active jenkins
+  changed_when: false
+
+- name: Verify Azure CLI
+  command: az version
+  changed_when: false
+
+- name: Verify kubectl
+  command: kubectl version --client
+  changed_when: false
+
+- name: Verify Helm
+  command: helm version
+  changed_when: false

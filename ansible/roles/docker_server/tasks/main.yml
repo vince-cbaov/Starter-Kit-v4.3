@@ -4,12 +4,22 @@
 # - Disable Docker Remote API entirely
 # - Use local Unix socket only
 # - Designed for Jenkins → SSH → docker build
+# - Install Azure CLI, kubectl, Helm, Java 21
+
+# -------------------------------------------------
+# Base system prep
+# -------------------------------------------------
 
 - name: Ensure apt cache is up to date
   apt:
     update_cache: yes
   changed_when: false
   become: true
+
+
+# -------------------------------------------------
+# Docker installation
+# -------------------------------------------------
 
 - name: Install Docker engine
   apt:
@@ -23,6 +33,7 @@
     enabled: true
     state: started
   become: true
+
 
 # -------------------------------------------------
 # Configure Docker to use LOCAL SOCKET ONLY
@@ -40,6 +51,7 @@
         "hosts": ["unix:///var/run/docker.sock"]
       }
   become: true
+
 
 # -------------------------------------------------
 # Ensure Docker uses daemon.json and not fd://
@@ -66,14 +78,16 @@
       ExecStart=/usr/bin/dockerd
   become: true
 
+
 # -------------------------------------------------
-# Validate configuration before restart
+# Validate Docker configuration before restart
 # -------------------------------------------------
 
 - name: Validate /etc/docker/daemon.json
   shell: "python3 -m json.tool /etc/docker/daemon.json > /dev/null"
   changed_when: false
   become: true
+
 
 # -------------------------------------------------
 # Restart Docker cleanly
@@ -85,6 +99,7 @@
     state: restarted
     daemon_reload: true
   become: true
+
 
 # -------------------------------------------------
 # Post-checks (fail fast if remote API is exposed)
@@ -102,3 +117,119 @@
       SECURITY ERROR: Docker Remote API is listening on TCP ports
       (2375/2376). This host must use SSH + local socket only.
   when: docker_api_ports.stdout != ""
+
+
+# -------------------------------------------------
+# Azure CLI installation (official Microsoft repo)
+# -------------------------------------------------
+
+- name: Install Azure CLI prerequisites
+  apt:
+    name:
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+    state: present
+  become: true
+
+- name: Ensure keyrings directory exists
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  become: true
+
+- name: Download Microsoft GPG key
+  get_url:
+    url: https://packages.microsoft.com/keys/microsoft.asc
+    dest: /etc/apt/keyrings/microsoft.asc
+    mode: "0644"
+  become: true
+
+- name: Convert Microsoft GPG key to keyring
+  command: >
+    gpg --dearmor
+    --yes
+    -o /etc/apt/keyrings/microsoft.gpg
+    /etc/apt/keyrings/microsoft.asc
+  args:
+    creates: /etc/apt/keyrings/microsoft.gpg
+  become: true
+
+- name: Add Azure CLI repository
+  apt_repository:
+    repo: >
+      deb [arch=amd64 signed-by=/etc/apt/keyrings/microsoft.gpg]
+      https://packages.microsoft.com/repos/azure-cli/
+      {{ ansible_distribution_release }}
+      main
+    filename: azure-cli
+    state: present
+  become: true
+
+- name: Install Azure CLI
+  apt:
+    name: azure-cli
+    state: present
+    update_cache: true
+  become: true
+
+
+# -------------------------------------------------
+# kubectl installation (Snap – avoids apt repo issues)
+# -------------------------------------------------
+
+- name: Install kubectl via snap
+  snap:
+    name: kubectl
+    classic: true
+    state: present
+  become: true
+
+
+# -------------------------------------------------
+# Helm installation (Snap)
+# -------------------------------------------------
+
+- name: Install Helm via snap
+  snap:
+    name: helm
+    classic: true
+    state: present
+  become: true
+
+
+# -------------------------------------------------
+# Java installation (OpenJDK 21)
+# -------------------------------------------------
+
+- name: Install OpenJDK 21
+  apt:
+    name: openjdk-21-jdk
+    state: present
+    update_cache: true
+  become: true
+
+
+# -------------------------------------------------
+# Verification / sanity checks
+# -------------------------------------------------
+
+- name: Verify Azure CLI
+  command: az version
+  changed_when: false
+
+- name: Verify kubectl
+  command: kubectl version --client
+  changed_when: false
+
+- name: Verify Helm
+  command: helm version
+  changed_when: false
+
+- name: Verify Java
+  command: java -version
+  changed_when: false

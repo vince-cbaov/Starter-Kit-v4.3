@@ -146,7 +146,7 @@ resource "azurerm_linux_virtual_machine" "docker" {
   }
 
   tags = {
-    role        = "docker"
+    role       = "docker"
     managed_by = "terraform"
   }
 }
@@ -181,7 +181,7 @@ resource "azurerm_linux_virtual_machine" "jenkins" {
   }
 
   tags = {
-    role        = "jenkins"
+    role       = "jenkins"
     managed_by = "terraform"
   }
 }

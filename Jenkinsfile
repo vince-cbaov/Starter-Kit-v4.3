@@ -50,7 +50,7 @@ stage('Build & Push Image (Docker VM)') {
       sh '''
         set -e
 
-        ssh -T vinadmin@10.10.1.5 \
+        ssh -T vinadmin@10.10.1.4 \
           AZ_CLIENT_ID="$AZ_CLIENT_ID" \
           AZ_CLIENT_SECRET="$AZ_CLIENT_SECRET" \
           AZ_TENANT_ID="$AZ_TENANT_ID" \
