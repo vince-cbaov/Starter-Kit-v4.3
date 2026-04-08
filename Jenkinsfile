@@ -57,7 +57,6 @@ stage('Build & Push Image (Docker VM)') {
             AZ_CLIENT_SECRET="${AZ_CLIENT_SECRET}" \
             AZ_TENANT_ID="${AZ_TENANT_ID}" \
             IMAGE_TAG="${IMAGE_TAG}" \
-          vinadmin@10.10.1.4 \
           bash -s << EOF
         set -e
 
