@@ -51,6 +51,11 @@ stage('Build & Push Image (Docker VM)') {
         ssh -i ~/.ssh/docker_server_key vinadmin@10.10.1.4 << 'EOF'
         set -e
 
+        export AZ_CLIENT_ID="${AZ_CLIENT_ID}"
+        export AZ_CLIENT_SECRET="${AZ_CLIENT_SECRET}"
+        export AZ_TENANT_ID="${AZ_TENANT_ID}"
+        export IMAGE_TAG="${IMAGE_TAG}"
+
         echo "Logging into Azure on Docker VM..."
         az login --service-principal \
           -u "$AZ_CLIENT_ID" \
