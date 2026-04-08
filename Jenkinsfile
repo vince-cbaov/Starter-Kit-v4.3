@@ -30,6 +30,7 @@ pipeline {
         ]) {
           sh '''
             set -e
+            echo "Tenant on Docker VM = [${AZ_TENANT_ID}]"
             az login \
               --service-principal \
               -u "$AZ_CLIENT_ID" \
