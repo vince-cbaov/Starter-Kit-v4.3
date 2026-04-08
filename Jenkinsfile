@@ -90,7 +90,7 @@ stage('Build & Push Image (Docker VM)') {
 
         echo "Pushing image..."
         docker push starterkitacr.azurecr.io/myapp:$IMAGE_TAG
-        EOF
+          EOF
       '''
     }
   }
