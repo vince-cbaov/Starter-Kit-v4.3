@@ -1,2 +1,0 @@
-Test text for checking Git
-next level
