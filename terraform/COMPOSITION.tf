@@ -134,15 +134,16 @@ resource "kubectl_manifest" "secretproviderclass" {
   ]
 }
 
-# --------------------
-# Outputs
-# --------------------
-output "key_vault_id" {
-  value       = module.kv.kv_id
-  description = "Resource ID of the Key Vault in use."
+resource "azurerm_role_assignment" "docker_acr_push" {
+  count                = var.enable_docker_vm ? 1 : 0
+  scope                = module.acr.acr_id
+  role_definition_name = "AcrPush"
+  principal_id         = module.identity.principal_id
 }
 
-output "workload_identity_client_id" {
-  value       = module.identity.client_id
-  description = "Client ID used by AKS Workload Identity."
+resource "azurerm_role_assignment" "docker_aks_admin" {
+  count                = var.enable_docker_vm ? 1 : 0
+  scope                = module.aks.aks_id
+  role_definition_name = "Azure Kubernetes Service RBAC Cluster Admin"
+  principal_id         = module.identity.principal_id
 }

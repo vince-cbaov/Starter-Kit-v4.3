@@ -15,3 +15,7 @@ output "oidc_issuer_url" {
   value       = azurerm_kubernetes_cluster.aks.oidc_issuer_url
   description = "OIDC issuer URL for AKS Workload Identity"
 }
+
+output "aks_id" {
+  value = azurerm_kubernetes_cluster.aks.id
+}

@@ -123,7 +123,7 @@ resource "azurerm_linux_virtual_machine" "docker" {
   resource_group_name = var.rg_name
   size                = "Standard_B2s"
   admin_username      = var.admin_username
-  
+
   identity {
     type = "SystemAssigned"
   }
@@ -153,18 +153,6 @@ resource "azurerm_linux_virtual_machine" "docker" {
     role       = "docker"
     managed_by = "terraform"
   }
-}
-
-resource "azurerm_role_assignment" "docker_acr_push" {
-  scope                = azurerm_container_registry.acr.id
-  role_definition_name = "AcrPush"
-  principal_id         = azurerm_linux_virtual_machine.docker[0].identity[0].principal_id
-}
-
-resource "azurerm_role_assignment" "docker_aks_admin" {
-  scope                = azurerm_kubernetes_cluster.aks.id
-  role_definition_name = "Azure Kubernetes Service RBAC Cluster Admin"
-  principal_id         = azurerm_linux_virtual_machine.docker[0].identity[0].principal_id
 }
 
 resource "azurerm_linux_virtual_machine" "jenkins" {

@@ -12,15 +12,3 @@ resource "azurerm_container_registry" "acr" {
   sku                 = var.sku
   admin_enabled       = false
 }
-
-output "name" {
-  value = azurerm_container_registry.acr.name
-}
-
-output "login_server" {
-  value = azurerm_container_registry.acr.login_server
-}
-
-output "acr_id" {
-  value = azurerm_container_registry.acr.id
-}

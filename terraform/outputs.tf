@@ -10,9 +10,18 @@ output "rg_name" {
   value = module.rg.name
 }
 
-# output "id" {
-#   value = azurerm_resource_group.rg.id
-# }
+# --------------------
+# Outputs
+# --------------------
+output "key_vault_id" {
+  value       = module.kv.kv_id
+  description = "Resource ID of the Key Vault in use."
+}
+
+output "workload_identity_client_id" {
+  value       = module.identity.client_id
+  description = "Client ID used by AKS Workload Identity."
+}
 
 output "rg_location" {
   value = module.rg.location
