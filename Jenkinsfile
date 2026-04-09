@@ -21,6 +21,54 @@ pipeline {
       }
     }
 
+    /* ============================
+       SCAN STAGE (QUALITY GATE)
+       ============================ */
+
+    stage('Scan') {
+      steps {
+        sh '''
+          set -e
+          echo "Running basic security and quality scans..."
+
+          echo "Checking Dockerfile exists..."
+          test -f Dockerfile
+
+          echo "Checking Helm chart structure..."
+          test -d helm/myapp
+          test -f helm/myapp/Chart.yaml
+          test -f helm/myapp/values.yaml
+
+          echo "Scan stage complete."
+        '''
+      }
+    }
+
+    /* ============================
+       TEST STAGE (CORRECTNESS GATE)
+       ============================ */
+
+    stage('Test') {
+      steps {
+        sh '''
+          set -e
+          echo "Running application tests..."
+
+          echo "Validating app files..."
+          test -f app/index.html
+
+          echo "Basic HTML sanity check..."
+          grep -qi "<html" app/index.html
+
+          echo "Test stage complete."
+        '''
+      }
+    }
+
+    /* ============================
+       BUILD AUTH (AZURE LOGIN)
+       ============================ */
+
     stage('Azure Login (Build Auth)') {
       steps {
         withCredentials([
@@ -30,7 +78,7 @@ pipeline {
         ]) {
           sh '''
             set -e
-            echo "Tenant on Docker VM = [${AZ_TENANT_ID}]"
+            echo "Logging into Azure (Jenkins VM)..."
             az login \
               --service-principal \
               -u "$AZ_CLIENT_ID" \
@@ -41,60 +89,63 @@ pipeline {
       }
     }
 
-stage('Build & Push Image (Docker VM)') {
-  steps {
-    withCredentials([
-      string(credentialsId: 'azure-sp-client-id', variable: 'AZ_CLIENT_ID'),
-      string(credentialsId: 'azure-sp-client-secret', variable: 'AZ_CLIENT_SECRET'),
-      string(credentialsId: 'azure-sp-tenant-id', variable: 'AZ_TENANT_ID')
-    ]) {
-      sh '''
-        set -e
+    /* ============================
+       BUILD & PUSH (DOCKER VM)
+       ============================ */
 
-        ssh -T -i ~/.ssh/docker_server_key vinadmin@10.10.1.4 \
-          env \
-            AZ_CLIENT_ID="${AZ_CLIENT_ID}" \
-            AZ_CLIENT_SECRET="${AZ_CLIENT_SECRET}" \
-            AZ_TENANT_ID="${AZ_TENANT_ID}" \
-            IMAGE_TAG="${IMAGE_TAG}" \
-          bash
-        set -e
+    stage('Build & Push Image (Docker VM)') {
+      steps {
+        withCredentials([
+          string(credentialsId: 'azure-sp-client-id', variable: 'AZ_CLIENT_ID'),
+          string(credentialsId: 'azure-sp-client-secret', variable: 'AZ_CLIENT_SECRET'),
+          string(credentialsId: 'azure-sp-tenant-id', variable: 'AZ_TENANT_ID')
+        ]) {
+          sh '''
+            set -e
 
-        echo "Ensuring source code is present on Docker VM..."
+            ssh -T -i ~/.ssh/docker_server_key vinadmin@10.10.1.4 << EOF
+              set -e
 
-        if [ ! -d "/var/tmp/build/Starter-Kit-v4.3/.git" ]; then
-          echo "Cloning repository..."
-          git clone https://github.com/vince-cbaov/Starter-Kit-v4.3.git /var/tmp/build/Starter-Kit-v4.3
-        else
-          echo "Updating existing repository..."
-          cd /var/tmp/build/Starter-Kit-v4.3
-          git fetch origin
-          git reset --hard origin/main
-        fi
+              export AZ_CLIENT_ID="${AZ_CLIENT_ID}"
+              export AZ_CLIENT_SECRET="${AZ_CLIENT_SECRET}"
+              export AZ_TENANT_ID="${AZ_TENANT_ID}"
+              export IMAGE_TAG="${IMAGE_TAG}"
 
-        cd /var/tmp/build/Starter-Kit-v4.3
+              echo "Ensuring source code is present..."
 
-        echo "Tenant inside Docker VM = [$AZ_TENANT_ID]"
+              if [ ! -d "/var/tmp/build/Starter-Kit-v4.3/.git" ]; then
+                git clone https://github.com/vince-cbaov/Starter-Kit-v4.3.git /var/tmp/build/Starter-Kit-v4.3
+              else
+                cd /var/tmp/build/Starter-Kit-v4.3
+                git fetch origin
+                git reset --hard origin/main
+              fi
 
-        echo "Logging into Azure on Docker VM..."
-        az login --service-principal \
-          -u "$AZ_CLIENT_ID" \
-          -p "$AZ_CLIENT_SECRET" \
-          --tenant "$AZ_TENANT_ID"
+              cd /var/tmp/build/Starter-Kit-v4.3
 
-        echo "Logging into ACR..."
-        sudo az acr login --name starterkitacr
+              echo "Logging into Azure (Docker VM)..."
+              az login --service-principal \
+                -u "$AZ_CLIENT_ID" \
+                -p "$AZ_CLIENT_SECRET" \
+                --tenant "$AZ_TENANT_ID"
 
-        echo "Building image with tag: $IMAGE_TAG"
-        sudo docker build -t starterkitacr.azurecr.io/myapp:$IMAGE_TAG .
+              echo "Logging into ACR..."
+              sudo az acr login --name ${ACR_NAME}
 
-        echo "Pushing image..."
-        sudo docker push starterkitacr.azurecr.io/myapp:$IMAGE_TAG
-        
-      '''
+              echo "Building Docker image ${IMAGE_TAG}..."
+              sudo docker build -t ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG} .
+
+              echo "Pushing Docker image..."
+              sudo docker push ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG}
+            EOF
+          '''
+        }
+      }
     }
-  }
-}
+
+    /* ============================
+       DEPLOY (HELM → AKS)
+       ============================ */
 
     stage('Deploy to AKS') {
       steps {
@@ -113,7 +164,7 @@ stage('Build & Push Image (Docker VM)') {
               -p "$AZ_CLIENT_SECRET" \
               --tenant "$AZ_TENANT_ID"
 
-            echo "Getting AKS credentials..."
+            echo "Fetching AKS credentials..."
             az aks get-credentials \
               --resource-group "$AKS_RG" \
               --name "$AKS_NAME" \
@@ -131,6 +182,5 @@ stage('Build & Push Image (Docker VM)') {
         }
       }
     }
-
   }
 }
