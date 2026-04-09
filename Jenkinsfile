@@ -103,7 +103,7 @@ pipeline {
           sh '''
             set -e
 
-            ssh -T -i ~/.ssh/docker_server_key vinadmin@10.10.1.4 << EOF
+            ssh -T -i ~/.ssh/docker_server_key vinadmin@10.10.1.5 << EOF
               set -e
 
               export AZ_CLIENT_ID="${AZ_CLIENT_ID}"
