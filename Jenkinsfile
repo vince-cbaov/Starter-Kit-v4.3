@@ -94,7 +94,6 @@ pipeline {
        ============================ */
     
 
-
 stage('Build & Push Image (Docker VM)') {
   steps {
     withCredentials([
@@ -162,6 +161,7 @@ stage('Build & Push Image (Docker VM)') {
     }
   }
 }
+
 
 
 // stage('Build & Push Image (Docker VM)') {
