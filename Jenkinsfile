@@ -14,6 +14,13 @@ pipeline {
     )
   }
 
+  sshagent(credentials: ['docker-server-ssh']) {
+  sh '''
+    ssh -o StrictHostKeyChecking=no vinadmin@10.10.1.4 \
+      echo "SSH works from Jenkins"
+  '''
+}
+
   environment {
     ACR_NAME    = "starterkitacr"
     IMAGE_NAME  = "myapp"
