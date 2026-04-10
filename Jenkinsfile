@@ -104,15 +104,18 @@ stage('Build & Push Image (Docker VM)') {
       sh '''
         set -e
 
-        ssh -T -i ~/.ssh/docker_server_key -o StrictHostKeyChecking=no vinadmin@10.10.1.5 << 'EOF'
-          set -e
+        ssh -T -i /home/vinadmin/.ssh/docker_server_key \
+          -o StrictHostKeyChecking=no \
+          vinadmin@10.10.1.5 \
+          AZ_CLIENT_ID="$AZ_CLIENT_ID" \
+          AZ_CLIENT_SECRET="$AZ_CLIENT_SECRET" \
+          AZ_TENANT_ID="$AZ_TENANT_ID" \
+          IMAGE_TAG="$IMAGE_TAG" \
+          ACR_NAME="$ACR_NAME" \
+          IMAGE_NAME="$IMAGE_NAME" \
+          'bash -s' << 'EOF'
 
-          export AZ_CLIENT_ID="$AZ_CLIENT_ID"
-          export AZ_CLIENT_SECRET="$AZ_CLIENT_SECRET"
-          export AZ_TENANT_ID="$AZ_TENANT_ID"
-          export IMAGE_TAG="$IMAGE_TAG"
-          export ACR_NAME="$ACR_NAME"
-          export IMAGE_NAME="$IMAGE_NAME"
+          set -e
 
           echo "Ensuring source code is present..."
           if [ ! -d "/var/tmp/build/Starter-Kit-v4.3/.git" ]; then
@@ -154,6 +157,7 @@ stage('Build & Push Image (Docker VM)') {
 
           echo "Pushing Docker image..."
           docker push ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG}
+
         EOF
       '''
     }
