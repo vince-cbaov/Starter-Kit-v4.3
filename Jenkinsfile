@@ -223,13 +223,13 @@ stage('Build & Push Image (Docker VM)') {
 
             echo "Deploying with Helm..."
             helm upgrade --install myapp "$HELM_CHART" \
-              --namespace "$NAMESPACE" \
+              --namespace default \
               --create-namespace \
               --set replicaCount=1 \
               --set image.repository="$ACR_NAME.azurecr.io/$IMAGE_NAME" \
               --set image.tag="$IMAGE_TAG" \
-              --wait
-              --timeout 120s
+              --wait \
+              --timeout 5m
           '''
         }
       }
