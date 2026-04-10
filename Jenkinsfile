@@ -113,7 +113,6 @@ pipeline {
               export ACR_NAME="${ACR_NAME}"
               export IMAGE_NAME="${IMAGE_NAME}"
 
-
               echo "Ensuring source code is present..."
 
               if [ ! -d "/var/tmp/build/Starter-Kit-v4.3/.git" ]; then
