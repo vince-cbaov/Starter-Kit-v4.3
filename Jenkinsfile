@@ -95,6 +95,7 @@ pipeline {
     
 
 
+
 stage('Build & Push Image (Docker VM)') {
   steps {
     withCredentials([
@@ -103,8 +104,7 @@ stage('Build & Push Image (Docker VM)') {
       string(credentialsId: 'azure-sp-tenant-id', variable: 'AZ_TENANT_ID')
     ]) {
       sh '''
-        cat <<'EOF' | ssh -T -i /home/vinadmin/.ssh/docker_server_key \
-          -o StrictHostKeyChecking=no \
+          cat <<'EOF' | ssh -T -i /home/vinadmin/.ssh/docker_server_key -o StrictHostKeyChecking=no \
           vinadmin@10.10.1.5 \
           AZ_CLIENT_ID="$AZ_CLIENT_ID" \
           AZ_CLIENT_SECRET="$AZ_CLIENT_SECRET" \
@@ -113,50 +113,50 @@ stage('Build & Push Image (Docker VM)') {
           ACR_NAME="$ACR_NAME" \
           IMAGE_NAME="$IMAGE_NAME" \
           bash -s
-        set -e
+          set -e
 
-        echo "Ensuring source code is present..."
-        if [ ! -d "/var/tmp/build/Starter-Kit-v4.3/.git" ]; then
-          git clone https://github.com/vince-cbaov/Starter-Kit-v4.3.git /var/tmp/build/Starter-Kit-v4.3
-        else
+          echo "Ensuring source code is present..."
+          if [ ! -d "/var/tmp/build/Starter-Kit-v4.3/.git" ]; then
+            git clone https://github.com/vince-cbaov/Starter-Kit-v4.3.git /var/tmp/build/Starter-Kit-v4.3
+          else
+            cd /var/tmp/build/Starter-Kit-v4.3
+            git fetch origin
+            git reset --hard origin/main
+          fi
+
           cd /var/tmp/build/Starter-Kit-v4.3
-          git fetch origin
-          git reset --hard origin/main
-        fi
 
-        cd /var/tmp/build/Starter-Kit-v4.3
+          echo "Logging into Azure (Docker VM)..."
+          az login \
+            --service-principal \
+            -u "$AZ_CLIENT_ID" \
+            -p "$AZ_CLIENT_SECRET" \
+            --tenant "$AZ_TENANT_ID" \
+            --output none
 
-        echo "Logging into Azure (Docker VM)..."
-        az login \
-          --service-principal \
-          -u "$AZ_CLIENT_ID" \
-          -p "$AZ_CLIENT_SECRET" \
-          --tenant "$AZ_TENANT_ID" \
-          --output none
+          echo "Requesting ACR token..."
+          TOKEN=$(az acr login \
+            --name "$ACR_NAME" \
+            --expose-token \
+            --output tsv \
+            --query accessToken)
 
-        echo "Requesting ACR token..."
-        TOKEN=$(az acr login \
-          --name "$ACR_NAME" \
-          --expose-token \
-          --output tsv \
-          --query accessToken)
+          if [ -z "$TOKEN" ]; then
+            echo "ERROR: ACR token is empty"
+            exit 1
+          fi
 
-        if [ -z "$TOKEN" ]; then
-          echo "ERROR: ACR token is empty"
-          exit 1
-        fi
+          echo "$TOKEN" | docker login ${ACR_NAME}.azurecr.io \
+            --username 00000000-0000-0000-0000-000000000000 \
+            --password-stdin
 
-        echo "$TOKEN" | docker login ${ACR_NAME}.azurecr.io \
-          --username 00000000-0000-0000-0000-000000000000 \
-          --password-stdin
+          echo "Building Docker image ${IMAGE_TAG}..."
+          docker build -t ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG} .
 
-        echo "Building Docker image ${IMAGE_TAG}..."
-        docker build -t ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG} .
-
-        echo "Pushing Docker image..."
-        docker push ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG}
-        EOF
-        '''
+          echo "Pushing Docker image..."
+          docker push ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG}
+          EOF
+          '''
     }
   }
 }
