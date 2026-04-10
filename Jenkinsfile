@@ -229,7 +229,7 @@ stage('Build & Push Image (Docker VM)') {
               --set image.repository="$ACR_NAME.azurecr.io/$IMAGE_NAME" \
               --set image.tag="$IMAGE_TAG" \
               --wait
-              --timeout 300s
+              --timeout 120s
           '''
         }
       }
