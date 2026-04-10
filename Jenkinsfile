@@ -103,6 +103,10 @@ stage('Build & Push Image (Docker VM)') {
       string(credentialsId: 'azure-sp-tenant-id', variable: 'AZ_TENANT_ID')
     ]) {
       sh '''
+        echo "Workspace is: $WORKSPACE"
+        echo "Listing terraform scripts:"
+        ls -l "$WORKSPACE/terraform/scripts"
+
         ssh -i /home/vinadmin/.ssh/docker_server_key \
           -o StrictHostKeyChecking=no \
           vinadmin@10.10.1.5 \
@@ -112,12 +116,11 @@ stage('Build & Push Image (Docker VM)') {
           ACR_NAME="$ACR_NAME" \
           IMAGE_NAME="$IMAGE_NAME" \
           IMAGE_TAG="$IMAGE_TAG" \
-          bash -s < scripts/docker-build-push.sh
+          bash -s < "$WORKSPACE/terraform/scripts/docker-build-push.sh"
       '''
     }
   }
 }
-
 
 
 // stage('Build & Push Image (Docker VM)') {
