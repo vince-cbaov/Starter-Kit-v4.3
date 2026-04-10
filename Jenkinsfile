@@ -107,13 +107,14 @@ stage('Build & Push Image (Docker VM)') {
 
         ssh -T -i /home/vinadmin/.ssh/docker_server_key \
           -o StrictHostKeyChecking=no \
+          vinadmin@10.10.1.5 \
           AZ_CLIENT_ID="$AZ_CLIENT_ID" \
           AZ_CLIENT_SECRET="$AZ_CLIENT_SECRET" \
           AZ_TENANT_ID="$AZ_TENANT_ID" \
           IMAGE_TAG="$IMAGE_TAG" \
           ACR_NAME="$ACR_NAME" \
           IMAGE_NAME="$IMAGE_NAME" \
-          vinadmin@10.10.1.5 bash -s << "EOF"
+          bash -s << "EOF"
 
         set -e
 
