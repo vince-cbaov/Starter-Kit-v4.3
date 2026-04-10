@@ -1,19 +1,22 @@
 #!/usr/bin/env bash
 set -e
 
-echo "Ensuring source code is present..."
-mkdir -p /var/tmp/build
-cd /var/tmp/build
+BUILD_ROOT="/var/tmp/build"
+APP_DIR="$BUILD_ROOT/app"
 
-if [ ! -d Starter-Kit-v4.3/.git ]; then
-  git clone https://github.com/vince-cbaov/Starter-Kit-v4.3.git
-else
-  cd Starter-Kit-v4.3
-  git fetch origin
-  git reset --hard origin/main
+echo "Ensuring source code is present..."
+
+mkdir -p "$BUILD_ROOT"
+cd "$BUILD_ROOT"
+
+if [ ! -d "$APP_DIR/.git" ]; then
+  git clone https://github.com/vince-cbaov/Starter-Kit-v4.3.git "$APP_DIR"
 fi
 
-cd Starter-Kit-v4.3
+cd "$APP_DIR"
+
+git fetch origin
+git reset --hard origin/main
 
 echo "Logging into Azure..."
 az login \
