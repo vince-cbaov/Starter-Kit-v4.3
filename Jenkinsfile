@@ -65,6 +65,32 @@ pipeline {
       }
     }
 
+    pipeline {
+    agent any
+
+    parameters {
+        string(
+            name: 'KV_URL',
+            defaultValue: 'https://skdev2kv.vault.azure.net/',
+            description: 'Azure Key Vault URL'
+        )
+        string(
+            name: 'DOCKER_SERVER_IP',
+            defaultValue: '10.10.1.4',
+            description: 'Docker server private IP'
+        )
+    }
+
+    stages {
+        stage('Verify Parameters') {
+            steps {
+                echo "Key Vault URL: ${params.KV_URL}"
+                echo "Docker Server IP: ${params.DOCKER_SERVER_IP}"
+            }
+        }
+    }
+}
+
     /* ============================
        BUILD AUTH (AZURE LOGIN)
        ============================ */

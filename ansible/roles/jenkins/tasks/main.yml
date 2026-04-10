@@ -188,6 +188,36 @@
   become: true
 
 # Trivy (filesystem + image scanning)
+# Install prerequisites
+- name: Install required packages
+  apt:
+    name:
+      - wget
+      - gnupg
+      - apt-transport-https
+    state: present
+    update_cache: true
+  become: true
+
+# Add Trivy GPG key
+- name: Add Trivy GPG key
+  shell: |
+    wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key \
+    | gpg --dearmor \
+    | tee /usr/share/keyrings/trivy.gpg > /dev/null
+  args:
+    creates: /usr/share/keyrings/trivy.gpg
+  become: true
+
+# Add Trivy APT repository
+- name: Add Trivy APT repository
+  apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb generic main"
+    filename: trivy
+    state: present
+  become: true
+
+# Install Trivy
 - name: Install Trivy
   apt:
     name: trivy
@@ -232,6 +262,7 @@
   command: yamllint --version
   changed_when: false
 
-- name: Verify git-secrets
-  command: git-secrets --version
+- name: Verify git-secrets is installed
+  shell: command -v git-secrets
+  register: git_secrets_path
   changed_when: false
