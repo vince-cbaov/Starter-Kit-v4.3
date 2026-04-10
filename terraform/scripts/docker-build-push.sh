@@ -2,7 +2,8 @@
 set -e
 
 echo "Ensuring source code is present..."
-cd /var/tmp/build || exit 1
+mkdir -p /var/tmp/build
+cd /var/tmp/build
 
 if [ ! -d Starter-Kit-v4.3/.git ]; then
   git clone https://github.com/vince-cbaov/Starter-Kit-v4.3.git
