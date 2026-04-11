@@ -1,4 +1,12 @@
 # ---------------------------
+# SSH Key (Jenkins → Docker)
+# ---------------------------
+resource "tls_private_key" "jenkins_docker_ssh" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
+# ---------------------------
 # Docker VM
 # ---------------------------
 resource "azurerm_public_ip" "docker_pip" {
@@ -84,7 +92,7 @@ resource "azurerm_network_security_group" "shared_nsg" {
     destination_address_prefix = "*"
   }
 
-  # Jenkins UI (8080) – restricted
+  # Jenkins UI (8080)
   security_rule {
     name                       = "jenkins-ui"
     priority                   = 1002
@@ -114,7 +122,7 @@ resource "azurerm_network_interface_security_group_association" "jenkins_nsg_ass
 }
 
 # ---------------------------
-# VMs
+# Docker VM
 # ---------------------------
 resource "azurerm_linux_virtual_machine" "docker" {
   count               = var.enable_docker_vm ? 1 : 0
@@ -123,19 +131,19 @@ resource "azurerm_linux_virtual_machine" "docker" {
   resource_group_name = var.rg_name
   size                = "Standard_B2s"
   admin_username      = var.admin_username
-  
-admin_ssh_key {
-    username   = "vinadmin"
-    public_key = tls_private_key.jenkins_docker_ssh.public_key_openssh
-  }
+
+  network_interface_ids = [
+    azurerm_network_interface.docker_nic[0].id
+  ]
 
   identity {
     type = "SystemAssigned"
   }
 
-  network_interface_ids = [
-    azurerm_network_interface.docker_nic[0].id
-  ]
+  admin_ssh_key {
+    username   = var.admin_username
+    public_key = tls_private_key.jenkins_docker_ssh.public_key_openssh
+  }
 
   os_disk {
     caching              = "ReadWrite"
@@ -149,17 +157,15 @@ admin_ssh_key {
     version   = "latest"
   }
 
-  admin_ssh_key {
-    username   = var.admin_username
-    public_key = var.ssh_public_key
-  }
-
   tags = {
     role       = "docker"
     managed_by = "terraform"
   }
 }
 
+# ---------------------------
+# Jenkins VM
+# ---------------------------
 resource "azurerm_linux_virtual_machine" "jenkins" {
   count               = var.create_vms ? 1 : 0
   name                = "${var.name_prefix}-jenkins"
@@ -172,6 +178,15 @@ resource "azurerm_linux_virtual_machine" "jenkins" {
     azurerm_network_interface.jenkins_nic[0].id
   ]
 
+  identity {
+    type = "SystemAssigned"
+  }
+
+  admin_ssh_key {
+    username   = var.admin_username
+    public_key = var.ssh_public_key
+  }
+
   os_disk {
     caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
@@ -184,19 +199,17 @@ resource "azurerm_linux_virtual_machine" "jenkins" {
     version   = "latest"
   }
 
-  admin_ssh_key {
-    username   = var.admin_username
-    public_key = var.ssh_public_key
-  }
-
   tags = {
     role       = "jenkins"
     managed_by = "terraform"
   }
 }
 
+# ---------------------------------
+# Store SSH Private Key in Key Vault
+# ---------------------------------
 resource "azurerm_key_vault_secret" "jenkins_ssh_key" {
   name         = "jenkins-docker-ssh-private-key"
   value        = tls_private_key.jenkins_docker_ssh.private_key_openssh
-  key_vault_id = azurerm_key_vault.main.id
+  key_vault_id = var.key_vault_id
 }

@@ -18,7 +18,7 @@ resource "azurerm_key_vault" "kv" {
 
   soft_delete_retention_days = 7
   purge_protection_enabled   = true
-  enable_rbac_authorization  = true
+  rbac_authorization_enabled = true
 }
 
 # --- Allow Terraform runner to manage secrets
@@ -38,13 +38,6 @@ resource "azurerm_role_assignment" "workload_kv_access" {
 
   depends_on = [azurerm_key_vault.kv]
 }
-
-# # --- UAMI ACCESS (if not using workload identity)
-# resource "azurerm_role_assignment" "uami_kv_secrets_user" {
-#   scope                = local.kv_id
-#   role_definition_name = "Key Vault Administrator"
-#   principal_id         = var.workload_identity_principal_id
-# }
 
 # --- Optional: extra read access
 resource "azurerm_role_assignment" "extra_access" {

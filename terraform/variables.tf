@@ -1,10 +1,10 @@
 ############################################
-# ROOT VARIABLES — Final Aligned Version
+# ROOT VARIABLES — FINAL CLEAN VERSION
 ############################################
 
-#
+# ---------------------------
 # Global Settings
-#
+# ---------------------------
 variable "location" {
   type        = string
   description = "Azure region to deploy into"
@@ -22,9 +22,9 @@ variable "trusted_cidr" {
   description = "CIDR allowed to access exposed services (NSG rules)"
 }
 
-#
+# ---------------------------
 # Compute / VM Settings
-#
+# ---------------------------
 variable "admin_username" {
   type        = string
   description = "VM administrator username"
@@ -32,7 +32,7 @@ variable "admin_username" {
 
 variable "ssh_public_key" {
   type        = string
-  description = "SSH public key for VM login"
+  description = "SSH public key for Jenkins VM admin access"
 }
 
 variable "create_vms" {
@@ -47,26 +47,21 @@ variable "enable_docker_vm" {
   default     = true
 }
 
-#
+# ---------------------------
 # ACR
-#
+# ---------------------------
 variable "acr_name" {
   type        = string
   description = "Override ACR name (optional)"
   default     = null
 }
 
-#
-# Key Vault + SP Settings
-#
-variable "sp_object_id" {
-  type        = string
-  description = "Object ID of the identity running Terraform (for KV secret writes)"
-}
-
+# ---------------------------
+# Key Vault
+# ---------------------------
 variable "ssh_private_key" {
   type        = string
-  description = "Optional SSH private key to store in KV"
+  description = "Optional SSH private key to store in Key Vault"
   default     = null
 }
 
@@ -78,7 +73,7 @@ variable "secrets" {
 
 variable "access_object_ids" {
   type        = list(string)
-  description = "Additional identities to grant KV data-plane access"
+  description = "Additional identities to grant Key Vault data-plane access"
   default     = []
 }
 
@@ -88,26 +83,9 @@ variable "rbac_wait_seconds" {
   default     = 60
 }
 
-variable "extra_role_assignments" {
-  type = list(object({
-    role_definition_name = string
-    scope                = string
-  }))
-  description = "Optional extra management-plane RBAC assignments for the SP"
-  default     = []
-}
-
-variable "tenant_id" {
-  type        = string
-  description = "Azure Tenant ID (for CSI driver configuration)"
-}
-
-# variable "resource_group_name" {
-#   type        = string
-#   description = "Name of the resource group to create/use"
-
-# }
-
+# ---------------------------
+# AKS
+# ---------------------------
 variable "cluster_name" {
   type        = string
   description = "Name of the AKS cluster to create"

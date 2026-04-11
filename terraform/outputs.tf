@@ -1,53 +1,82 @@
-output "kv_name" {
-  value = module.kv.kv_name
-}
+############################################
+# ROOT OUTPUTS — FINAL CLEAN VERSION
+############################################
 
-output "kv_uri" {
-  value = module.kv.kv_uri
-}
-
+# --------------------
+# Resource Group
+# --------------------
 output "rg_name" {
-  value = module.rg.name
-}
-
-# --------------------
-# Outputs
-# --------------------
-output "key_vault_id" {
-  value       = module.kv.kv_id
-  description = "Resource ID of the Key Vault in use."
-}
-
-output "workload_identity_client_id" {
-  value       = module.identity.client_id
-  description = "Client ID used by AKS Workload Identity."
+  description = "Name of the resource group"
+  value       = module.rg.name
 }
 
 output "rg_location" {
-  value = module.rg.location
+  description = "Location of the resource group"
+  value       = module.rg.location
 }
 
+# --------------------
+# Key Vault
+# --------------------
+output "kv_name" {
+  description = "Name of the Key Vault"
+  value       = module.kv.kv_name
+}
+
+output "kv_uri" {
+  description = "URI of the Key Vault"
+  value       = module.kv.kv_uri
+}
+
+output "key_vault_id" {
+  description = "Resource ID of the Key Vault"
+  value       = module.kv.kv_id
+}
+
+# --------------------
+# Workload Identity
+# --------------------
+output "workload_identity_client_id" {
+  description = "Client ID used by AKS Workload Identity"
+  value       = module.identity.client_id
+}
+
+# --------------------
+# ACR
+# --------------------
 output "acr_name" {
-  value = module.acr.name
+  description = "Azure Container Registry name"
+  value       = module.acr.name
 }
 
 output "acr_login_server" {
-  value = module.acr.login_server
+  description = "Azure Container Registry login server"
+  value       = module.acr.login_server
 }
 
+# --------------------
+# AKS
+# --------------------
 output "aks_name" {
-  value = module.aks.name
-}
-
-output "docker_vm_ip" {
-  value = module.compute.docker_public_ip
-}
-
-output "jenkins_vm_ip" {
-  value = module.compute.jenkins_public_ip
+  description = "AKS cluster name"
+  value       = module.aks.name
 }
 
 output "kube_config" {
-  value     = module.aks.kube_config
-  sensitive = true
+  description = "Raw kubeconfig for the AKS cluster"
+  value       = module.aks.kube_config
+  sensitive   = true
+}
+
+# --------------------
+# Compute
+# --------------------
+output "docker_vm_ip" {
+  description = "Public IP address of the Docker VM"
+  value       = module.compute.docker_public_ip
+}
+
+output "jenkins_vm_ip" {
+  description = "Public IP address of the Jenkins VM"
+  value       = module.compute.jenkins_public_ip
 }

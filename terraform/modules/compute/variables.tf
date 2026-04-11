@@ -1,3 +1,6 @@
+# ---------------------------
+# VM Creation Toggles
+# ---------------------------
 variable "create_vms" {
   description = "Create Jenkins VM"
   type        = bool
@@ -10,53 +13,73 @@ variable "enable_docker_vm" {
   default     = true
 }
 
+# ---------------------------
+# Core Infrastructure
+# ---------------------------
 variable "rg_name" {
-  type = string
+  description = "Resource group name"
+  type        = string
 }
 
 variable "location" {
-  type = string
+  description = "Azure region"
+  type        = string
 }
 
 variable "name_prefix" {
-  type = string
+  description = "Prefix for resource names"
+  type        = string
 }
 
 variable "subnet_id" {
-  type = string
+  description = "Subnet ID for VM NICs"
+  type        = string
 }
 
+# ---------------------------
+# VM Access
+# ---------------------------
 variable "admin_username" {
-  type    = string
-  default = "vinadmin"
+  description = "Admin username for Linux VMs"
+  type        = string
+  default     = "vinadmin"
 }
 
 variable "ssh_public_key" {
-  type = string
-}
-
-# Restrict exposed ports
-variable "trusted_cidr" {
-  description = "Your office/home IP in CIDR (e.g., 203.0.113.10/32)"
+  description = "Public SSH key for Jenkins VM admin access"
   type        = string
 }
 
-# --- NSG handling ---
-# If you have an NSG from the network module, pass its ID here to reuse it.
+variable "trusted_cidr" {
+  description = "Trusted CIDR allowed to access SSH/Jenkins UI (e.g. x.x.x.x/32)"
+  type        = string
+}
+
+# ---------------------------
+# Key Vault Integration
+# ---------------------------
+variable "key_vault_id" {
+  description = "ID of the Key Vault used to store generated secrets"
+  type        = string
+}
+
+# ---------------------------
+# NSG Handling (future‑proofed)
+# ---------------------------
 variable "nsg_id" {
+  description = "Existing NSG ID to associate with NICs (optional)"
   type        = string
   default     = null
-  description = "Existing NSG ID to associate with NICs. If null and create_nsg = true, a new NSG is created."
 }
 
 variable "create_nsg" {
+  description = "Create a new NSG when nsg_id is null"
   type        = bool
   default     = true
-  description = "Create a new NSG when nsg_id is null."
 }
 
 variable "nsg_name" {
+  description = "Override name for the created NSG"
   type        = string
   default     = null
-  description = "Override name for the created NSG. Default: <name_prefix>-shared-nsg"
 }
