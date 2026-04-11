@@ -123,6 +123,11 @@ resource "azurerm_linux_virtual_machine" "docker" {
   resource_group_name = var.rg_name
   size                = "Standard_B2s"
   admin_username      = var.admin_username
+  
+admin_ssh_key {
+    username   = "vinadmin"
+    public_key = tls_private_key.jenkins_docker_ssh.public_key_openssh
+  }
 
   identity {
     type = "SystemAssigned"
@@ -190,30 +195,8 @@ resource "azurerm_linux_virtual_machine" "jenkins" {
   }
 }
 
-# ---------------------------
-# Outputs
-# ---------------------------
-output "docker_public_ip" {
-  description = "Public IP of the Docker VM (admin only)"
-  value       = try(azurerm_public_ip.docker_pip[0].ip_address, null)
-}
-
-output "jenkins_public_ip" {
-  description = "Public IP of the Jenkins VM"
-  value       = try(azurerm_public_ip.jenkins_pip[0].ip_address, null)
-}
-
-output "docker_private_ip" {
-  description = "Private IP of Docker VM (used by Jenkins)"
-  value       = azurerm_network_interface.docker_nic[0].private_ip_address
-}
-
-output "jenkins_private_ip" {
-  description = "Private IP of Jenkins VM"
-  value       = azurerm_network_interface.jenkins_nic[0].private_ip_address
-}
-
-output "effective_nsg_id" {
-  description = "ID of the shared NSG"
-  value       = azurerm_network_security_group.shared_nsg.id
+resource "azurerm_key_vault_secret" "jenkins_ssh_key" {
+  name         = "jenkins-docker-ssh-private-key"
+  value        = tls_private_key.jenkins_docker_ssh.private_key_openssh
+  key_vault_id = azurerm_key_vault.main.id
 }
