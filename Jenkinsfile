@@ -17,19 +17,20 @@ pipeline {
 
   environment {
     // ACR / Image
-    ACR_NAME    = 'starterkitacr'
-    IMAGE_NAME  = 'myapp'
-    IMAGE_TAG   = ''   // computed in Prepare
+    ACR_NAME    = "starterkitacr"
+    IMAGE_NAME  = "myapp"
+
+    IMAGE_TAG   = ""   // computed in Prepare
 
     // Docker build VM
-    DOCKER_HOST = '10.10.1.5'
-    DOCKER_USER = 'vinadmin'
+    DOCKER_HOST = "10.10.1.5"
+    DOCKER_USER = "vinadmin"
 
     // AKS
-    AKS_RG     = 'sk-dev2-rg'
-    AKS_NAME   = 'sk-dev2-aks'
-    HELM_CHART = 'helm/myapp'
-    NAMESPACE  = 'default'
+    AKS_RG      = "sk-dev2-rg"
+    AKS_NAME    = "sk-dev2-aks"
+    HELM_CHART  = "helm/myapp"
+    NAMESPACE   = "default"
   }
 
   stages {
@@ -46,18 +47,24 @@ pipeline {
           def branch = env.BRANCH_NAME ?: 'main'
           echo "Branch: ${branch}"
 
-          if (params.VERSION == 'auto') {
-            // Simple rule: main = v1, everything else = v2
+          // Safe, defensive parameter handling
+          def versionParam = (params?.VERSION ?: 'auto').toString().trim()
+
+          if (versionParam == 'auto') {
             env.IMAGE_TAG = (branch == 'main') ? 'v1' : 'v2'
           } else {
-            env.IMAGE_TAG = params.VERSION
+            env.IMAGE_TAG = versionParam
+          }
+
+          // Absolute safety fallback
+          if (!env.IMAGE_TAG?.trim()) {
+            env.IMAGE_TAG = 'v1'
           }
 
           echo "Resolved IMAGE_TAG=${env.IMAGE_TAG}"
         }
       }
     }
-
     stage('Build Readiness Check') {
       steps {
         sh '''
@@ -148,10 +155,10 @@ pipeline {
 
   post {
     success {
-      echo " Deployment of ${IMAGE_TAG} completed successfully"
+      echo " Deployment of ${env.IMAGE_TAG ?: 'unknown'} completed successfully"
     }
     failure {
-      echo " Pipeline failed for ${IMAGE_TAG}"
+      echo " Pipeline failed for ${env.IMAGE_TAG ?: 'unknown'}"
     }
   }
 }
