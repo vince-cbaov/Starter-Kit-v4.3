@@ -9,7 +9,7 @@ pipeline {
   parameters {
     string(
       name: 'DOCKER_SERVER_IP',
-      defaultValue: '10.10.1.4',
+      defaultValue: '10.10.1.5',
       description: 'Docker build server private IP'
     )
     string(
