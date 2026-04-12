@@ -1,6 +1,14 @@
 pipeline {
   agent any
 
+  stages {
+    stage('PROVE JENKINSFILE') {
+      steps {
+        echo '🚨 NEW PIPELINE VERSION IS ACTIVE 🚨'
+      }
+    }
+
+
   options {
     timestamps()
     disableConcurrentBuilds()
