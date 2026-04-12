@@ -43,7 +43,11 @@ pipeline {
           def branch = env.BRANCH_NAME ?: 'main'
           echo "Branch: ${branch}"
 
-          def versionParam = (params?.VERSION ?: 'auto').toString().trim()
+          // Handle empty-string parameters correctly
+          def versionParam = params?.VERSION
+          if (versionParam == null || versionParam.trim().length() == 0) {
+            versionParam = 'auto'
+          }
 
           if (versionParam == 'auto') {
             env.IMAGE_TAG = (branch == 'main') ? 'v1' : 'v2'
@@ -51,7 +55,8 @@ pipeline {
             env.IMAGE_TAG = versionParam
           }
 
-          if (!env.IMAGE_TAG?.trim()) {
+          // Ultimate safety net
+          if (env.IMAGE_TAG == null || env.IMAGE_TAG.trim().length() == 0) {
             env.IMAGE_TAG = 'v1'
           }
 
@@ -59,7 +64,6 @@ pipeline {
         }
       }
     }
-
     stage('Build Readiness Check') {
       steps {
         sh '''
