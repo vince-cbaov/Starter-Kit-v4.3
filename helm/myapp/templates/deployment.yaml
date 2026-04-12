@@ -15,7 +15,10 @@ spec:
         azure.workload.identity/use: "true"
 
     spec:
+      
+      terminationGracePeriodSeconds: 10
       serviceAccountName: myapp-sa
+
 
       # nodeSelector / tolerations belong here (NOT inside volumeAttributes)
       nodeSelector:
