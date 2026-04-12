@@ -34,6 +34,15 @@
     state: started
   become: true
 
+  # -------------------------------------------------
+# Allow Jenkins SSH user to access Docker
+# -------------------------------------------------
+
+- name: Ensure Jenkins SSH user can access Docker
+  user:
+    name: vinadmin
+    groups: docker
+    append: yes
 
 # -------------------------------------------------
 # Configure Docker to use LOCAL SOCKET ONLY
