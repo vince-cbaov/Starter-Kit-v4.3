@@ -95,3 +95,8 @@ variable "dns_prefix" {
   type        = string
   description = "DNS prefix for the AKS cluster"
 }
+
+variable "workload_identity_client_id" {
+  description = "Client ID of the Azure AD application to use for AKS Workload Identity"
+  type        = string
+}

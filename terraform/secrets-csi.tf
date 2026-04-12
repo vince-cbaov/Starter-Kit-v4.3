@@ -4,12 +4,12 @@ resource "local_file" "secretproviderclass" {
   content = templatefile(
     "${path.module}/../k8s/csi/secretproviderclass.yaml.tftpl",
     {
-      client_id = azurerm_user_assigned_identity.workload.client_id
+      client_id = var.workload_identity_client_id
       tenant_id = data.azurerm_client_config.current.tenant_id
     }
   )
 
   depends_on = [
-    azurerm_kubernetes_cluster.aks
+    module.aks
   ]
 }

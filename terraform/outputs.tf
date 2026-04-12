@@ -74,9 +74,6 @@ output "jenkins_vm_ip" {
 }
 
 output "workload_identity_client_id" {
-  value = azurerm_user_assigned_identity.workload.client_id
-}
-
-output "aks_id" {
-  value = azurerm_kubernetes_cluster.aks.id
+  description = "Client ID of the Azure AD application used for AKS Workload Identity"
+  value       = var.workload_identity_client_id
 }
