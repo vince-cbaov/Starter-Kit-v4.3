@@ -90,7 +90,7 @@ pipeline {
 
           sh '''
             ssh -o StrictHostKeyChecking=no vinadmin@${DOCKER_SERVER_IP} "
-              echo '🔎 Verifying Docker access' &&
+              echo 'Verifying Docker access' &&
               docker version &&
               docker info
             "
