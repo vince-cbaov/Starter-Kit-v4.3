@@ -179,7 +179,7 @@ pipeline {
             --set image.repository="$ACR_NAME.azurecr.io/$IMAGE_NAME" \
             --set image.tag="$IMAGE_TAG" \
             --wait \
-            --timeout 90s
+            --timeout 
         '''
       }
     }
