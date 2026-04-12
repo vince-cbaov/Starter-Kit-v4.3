@@ -154,31 +154,36 @@ pipeline {
     }
 
     /* ==============================
-       DEPLOY (v1 + v2)
-       ============================== */
+    DEPLOY (v1 + v2)
+    ============================== */
     stage('Deploy to AKS') {
-  steps {
-    sh '''
-        az aks get-credentials \
-          --resource-group "$AKS_RG" \
-          --name "$AKS_NAME" \
-          --overwrite-existing
+      steps {
+        sh '''
+          set -e
 
-        # ONE-TIME safe deletion (idempotent)
-        kubectl delete deployment myapp \
-          --namespace "$NAMESPACE" \
-          --ignore-not-found
+          echo "Fetching AKS credentials"
+          az aks get-credentials \
+            --resource-group "$AKS_RG" \
+            --name "$AKS_NAME" \
+            --overwrite-existing
 
-        helm upgrade --install myapp "$HELM_CHART" \
-          --namespace "$NAMESPACE" \
-          --create-namespace \
-          --set image.repository="$ACR_NAME.azurecr.io/$IMAGE_NAME" \
-          --set image.tag="$IMAGE_TAG" \
-          --wait \
-          --timeout 5m
-    '''
+          echo "Deleting existing Deployment (idempotent)"
+          kubectl delete deployment myapp \
+            --namespace "$NAMESPACE" \
+            --ignore-not-found
+
+          echo "Deploying application with Helm"
+          helm upgrade --install myapp "$HELM_CHART" \
+            --namespace "$NAMESPACE" \
+            --create-namespace \
+            --set image.repository="$ACR_NAME.azurecr.io/$IMAGE_NAME" \
+            --set image.tag="$IMAGE_TAG" \
+            --wait \
+            --timeout 5m
+        '''
+      }
+    }
   }
-}
 
   post {
     success {
