@@ -177,7 +177,7 @@ pipeline {
             --namespace "$NAMESPACE" \
             --create-namespace \
             --set image.repository="$ACR_NAME.azurecr.io/$IMAGE_NAME" \
-            --set image.tag="$IMAGE_TAG" \
+            --set image.tag=v2 \
             --wait \
             --timeout 5m
         '''
