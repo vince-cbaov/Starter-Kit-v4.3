@@ -1,5 +1,3 @@
-data "azurerm_client_config" "current" {}
-
 resource "local_file" "secretproviderclass" {
   filename = "${path.module}/../k8s/csi/secretproviderclass.yaml"
 
