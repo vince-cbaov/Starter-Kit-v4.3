@@ -23,6 +23,8 @@ pipeline {
     ACR_NAME   = "starterkitacr"
     IMAGE_NAME = "myapp"
     IMAGE_TAG  = "${BUILD_NUMBER}"
+    
+    DOCKER_USER = "vinadmin"
 
     AKS_RG     = "sk-dev2-rg"
     AKS_NAME   = "sk-dev2-aks"
