@@ -5,6 +5,9 @@ pipeline {
     timestamps()
     disableConcurrentBuilds()
     buildDiscarder(logRotator(numToKeepStr: '30'))
+
+    // IMPORTANT: avoid double checkout (fixes hidden failure)
+    skipDefaultCheckout()
   }
 
   parameters {
@@ -46,7 +49,7 @@ pipeline {
           echo "Resolved branch: ${branch}"
           echo "Raw VERSION param: '${params.VERSION}'"
 
-          // Normalize VERSION parameter (handles null AND empty string)
+          // Normalize VERSION (handles null + empty string)
           def versionParam = params.VERSION
           if (versionParam == null || versionParam.trim().length() == 0) {
             versionParam = 'auto'
@@ -65,7 +68,7 @@ pipeline {
             resolvedTag = 'v1'
           }
 
-          //  Export ONCE
+          //  Export ONCE (authoritative)
           env.IMAGE_TAG = resolvedTag
 
           echo "Resolved IMAGE_TAG=${env.IMAGE_TAG}"
@@ -78,7 +81,8 @@ pipeline {
         sh '''
           set -e
           test -f Dockerfile
-          test -f app/index.html
+          test -d "app/$IMAGE_TAG"
+          test -f "app/$IMAGE_TAG/index.html"
           test -f helm/myapp/Chart.yaml
         '''
       }
@@ -125,7 +129,7 @@ pipeline {
       steps {
         sh '''
           echo "Running v2 quality checks"
-          grep -qi "<html" app/index.html
+          grep -qi "<html" app/v2/index.html
         '''
       }
     }
