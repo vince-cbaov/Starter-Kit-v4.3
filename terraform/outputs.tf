@@ -34,14 +34,6 @@ output "key_vault_id" {
 }
 
 # --------------------
-# Workload Identity
-# --------------------
-output "workload_identity_client_id" {
-  description = "Client ID used by AKS Workload Identity"
-  value       = module.identity.client_id
-}
-
-# --------------------
 # ACR
 # --------------------
 output "acr_name" {
@@ -79,4 +71,12 @@ output "docker_vm_ip" {
 output "jenkins_vm_ip" {
   description = "Public IP address of the Jenkins VM"
   value       = module.compute.jenkins_public_ip
+}
+
+output "workload_identity_client_id" {
+  value = azurerm_user_assigned_identity.workload.client_id
+}
+
+output "aks_id" {
+  value = azurerm_kubernetes_cluster.aks.id
 }
