@@ -180,13 +180,6 @@ pipeline {
             --set image.tag="$IMAGE_TAG" \
             --wait \
             --timeout 90s
-
-          az aks update `
-            --enable-oidc-issuer `
-            --enable-workload-identity `
-            --resource-group $RG_NAME `
-            --name $AKS_NAME
-
         '''
       }
     }
