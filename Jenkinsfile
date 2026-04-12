@@ -100,7 +100,6 @@ pipeline {
             string(credentialsId: 'azure-sp-tenant-id',     variable: 'AZ_TENANT_ID')
           ]) {
             sh """
-             sh """
               ssh -o StrictHostKeyChecking=no ${DOCKER_USER}@${DOCKER_HOST} '
                 set -e
 
