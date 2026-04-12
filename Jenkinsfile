@@ -4,48 +4,59 @@ pipeline {
   options {
     timestamps()
     disableConcurrentBuilds()
+    buildDiscarder(logRotator(numToKeepStr: '30'))
   }
 
   parameters {
-    string(
-      name: 'DOCKER_SERVER_IP',
-      defaultValue: '10.10.1.5',
-      description: 'Docker build server private IP'
-    )
-    string(
-      name: 'KV_URL',
-      defaultValue: 'https://skdev2kv.vault.azure.net/',
-      description: 'Azure Key Vault URL'
+    choice(
+      name: 'VERSION',
+      choices: ['auto', 'v1', 'v2'],
+      description: 'auto = derive from branch, otherwise force version'
     )
   }
 
   environment {
-    ACR_NAME   = "starterkitacr"
-    IMAGE_NAME = "myapp"
-    IMAGE_TAG  = "${BUILD_NUMBER}"
-    
-    DOCKER_USER = "vinadmin"
+    // ACR / Image
+    ACR_NAME    = 'starterkitacr'
+    IMAGE_NAME  = 'myapp'
+    IMAGE_TAG   = ''   // computed in Prepare
 
-    AKS_RG     = "sk-dev2-rg"
-    AKS_NAME   = "sk-dev2-aks"
-    HELM_CHART = "helm/myapp"
-    NAMESPACE  = "default"
+    // Docker build VM
+    DOCKER_HOST = '10.10.1.5'
+    DOCKER_USER = 'vinadmin'
+
+    // AKS
+    AKS_RG     = 'sk-dev2-rg'
+    AKS_NAME   = 'sk-dev2-aks'
+    HELM_CHART = 'helm/myapp'
+    NAMESPACE  = 'default'
   }
 
   stages {
 
-    /* ==============================
-       SOURCE
-       ============================== */
-    stage('Checkout Source') {
+    stage('Checkout') {
       steps {
         checkout scm
       }
     }
 
-    /* ==============================
-       COMMON STAGES (v1 + v2)
-       ============================== */
+    stage('Prepare version') {
+      steps {
+        script {
+          def branch = env.BRANCH_NAME ?: 'main'
+          echo "Branch: ${branch}"
+
+          if (params.VERSION == 'auto') {
+            // Simple rule: main = v1, everything else = v2
+            env.IMAGE_TAG = (branch == 'main') ? 'v1' : 'v2'
+          } else {
+            env.IMAGE_TAG = params.VERSION
+          }
+
+          echo "Resolved IMAGE_TAG=${env.IMAGE_TAG}"
+        }
+      }
+    }
 
     stage('Build Readiness Check') {
       steps {
@@ -58,128 +69,76 @@ pipeline {
       }
     }
 
-    stage('Azure Login (Controller Context)') {
+    stage('Build & Push Image (Docker VM)') {
       steps {
-        withCredentials([
-          string(credentialsId: 'azure-sp-client-id', variable: 'AZ_CLIENT_ID'),
-          string(credentialsId: 'azure-sp-client-secret', variable: 'AZ_CLIENT_SECRET'),
-          string(credentialsId: 'azure-sp-tenant-id', variable: 'AZ_TENANT_ID')
-        ]) {
-          sh '''
-            az login \
-              --service-principal \
-              -u "$AZ_CLIENT_ID" \
-              -p "$AZ_CLIENT_SECRET" \
-              --tenant "$AZ_TENANT_ID"
-          '''
-        }
-      }
-    }
+        sshagent(credentials: ['docker-server-ssh']) {
+          withCredentials([
+            string(credentialsId: 'azure-sp-client-id',     variable: 'AZ_CLIENT_ID'),
+            string(credentialsId: 'azure-sp-client-secret', variable: 'AZ_CLIENT_SECRET'),
+            string(credentialsId: 'azure-sp-tenant-id',     variable: 'AZ_TENANT_ID')
+          ]) {
+            sh """
+              ssh -o StrictHostKeyChecking=no ${DOCKER_USER}@${DOCKER_HOST} '
+                set -e
+                az login --service-principal \
+                  -u "$AZ_CLIENT_ID" \
+                  -p "$AZ_CLIENT_SECRET" \
+                  --tenant "$AZ_TENANT_ID"
 
-    /* ==============================
-       BUILD & PUSH (DOCKER VM)
-       ============================== */
-       
-   stage('Build & Push Image (Docker VM)') {
-    steps {
-      sshagent(credentials: ['docker-server-ssh']) {
+                az acr login --name ${ACR_NAME}
 
-        withCredentials([
-          string(credentialsId: 'azure-sp-client-id',     variable: 'AZ_CLIENT_ID'),
-          string(credentialsId: 'azure-sp-client-secret', variable: 'AZ_CLIENT_SECRET'),
-          string(credentialsId: 'azure-sp-tenant-id',     variable: 'AZ_TENANT_ID')
-        ]) {
+                docker build \
+                  --build-arg APP_VERSION=${IMAGE_TAG} \
+                  -t ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG} .
 
-          sh '''
-            ssh -o StrictHostKeyChecking=no vinadmin@${DOCKER_SERVER_IP} "
-              echo 'Verifying Docker access' &&
-              docker version &&
-              docker info
-            "
-
-            ssh -o StrictHostKeyChecking=no vinadmin@${DOCKER_SERVER_IP} \
-              AZ_CLIENT_ID="$AZ_CLIENT_ID" \
-              AZ_CLIENT_SECRET="$AZ_CLIENT_SECRET" \
-              AZ_TENANT_ID="$AZ_TENANT_ID" \
-              ACR_NAME="$ACR_NAME" \
-              IMAGE_NAME="$IMAGE_NAME" \
-              IMAGE_TAG="$IMAGE_TAG" \
-              'bash -s' < terraform/scripts/docker-build-push.sh
-          '''
-      }
-    }
-  }
-}
-
-    /* ==============================
-       v2 ONLY – QUALITY & SECURITY
-       ============================== */
-    stage('Quality & Security Gates (v2)') {
-      when {
-        tag "v2"
-      }
-      steps {
-        sh '''
-          echo "Running v2 quality and security gates"
-          grep -qi "<html" app/index.html
-          trivy --version || echo "Security tooling present"
-        '''
-      }
-    }
-
-    /* ==============================
-       v2 ONLY – PARAMETER VALIDATION
-       ============================== */
-    stage('Pre-Deployment Validation (v2)') {
-      when {
-        tag "v2"
-      }
-      steps {
-        script {
-          if (!params.KV_URL.startsWith("https://")) {
-            error "Invalid Key Vault URL"
+                docker push ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG}
+              '
+            """
           }
         }
       }
     }
 
-    /* ==============================
-       v2 ONLY – MANUAL APPROVAL
-       ============================== */
-    stage('Approve Deployment (v2)') {
+    stage('Quality & Security Gates (v2)') {
       when {
-        tag "v2"
+        expression { env.IMAGE_TAG == 'v2' }
       }
       steps {
-        input message: "Approve deployment to AKS?", ok: "Deploy"
+        sh '''
+          echo "Running v2 checks"
+          grep -qi "<html" app/index.html
+        '''
       }
     }
 
-    /* ==============================
-    DEPLOY (v1 + v2)
-    ============================== */
+    stage('Approve Deployment (v2)') {
+      when {
+        expression { env.IMAGE_TAG == 'v2' }
+      }
+      steps {
+        input message: "Approve v2 deployment to AKS?", ok: "Deploy"
+      }
+    }
+
     stage('Deploy to AKS') {
       steps {
         sh '''
           set -e
 
-          echo "Fetching AKS credentials"
           az aks get-credentials \
             --resource-group "$AKS_RG" \
             --name "$AKS_NAME" \
             --overwrite-existing
 
-          echo "Deleting existing Deployment (idempotent)"
           kubectl delete deployment myapp \
             --namespace "$NAMESPACE" \
             --ignore-not-found
 
-          echo "Deploying application with Helm"
           helm upgrade --install myapp "$HELM_CHART" \
             --namespace "$NAMESPACE" \
             --create-namespace \
             --set image.repository="$ACR_NAME.azurecr.io/$IMAGE_NAME" \
-            --set image.tag=v2 \
+            --set image.tag="$IMAGE_TAG" \
             --wait \
             --timeout 5m
         '''
@@ -189,10 +148,10 @@ pipeline {
 
   post {
     success {
-      echo "Pipeline completed successfully for tag ${env.GIT_TAG_NAME}"
+      echo " Deployment of ${IMAGE_TAG} completed successfully"
     }
     failure {
-      echo "Pipeline failed"
+      echo " Pipeline failed for ${IMAGE_TAG}"
     }
   }
 }
