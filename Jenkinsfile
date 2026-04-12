@@ -78,33 +78,32 @@ pipeline {
        BUILD & PUSH (DOCKER VM)
        ============================== */
        
-    stage('Build & Push Image (Docker VM)') {
-      steps {
-        sshagent(credentials: ['docker-server-ssh']) {
+   stage('Build & Push Image (Docker VM)') {
+    steps {
+      sshagent(credentials: ['docker-server-ssh']) {
 
-          withCredentials([
-            string(credentialsId: 'azure-sp-client-id',     variable: 'AZ_CLIENT_ID'),
-            string(credentialsId: 'azure-sp-client-secret', variable: 'AZ_CLIENT_SECRET'),
-            string(credentialsId: 'azure-sp-tenant-id',     variable: 'AZ_TENANT_ID')
-          ]) {
+        withCredentials([
+          string(credentialsId: 'azure-sp-client-id',     variable: 'AZ_CLIENT_ID'),
+          string(credentialsId: 'azure-sp-client-secret', variable: 'AZ_CLIENT_SECRET'),
+          string(credentialsId: 'azure-sp-tenant-id',     variable: 'AZ_TENANT_ID')
+        ]) {
 
-            sh '''
-              ssh -o StrictHostKeyChecking=no vinadmin@${DOCKER_SERVER_IP} "
+          sh '''
+            ssh -o StrictHostKeyChecking=no vinadmin@${DOCKER_SERVER_IP} "
+              echo '🔎 Verifying Docker access' &&
+              docker version &&
+              docker info
+            "
 
-                echo 'Verifying Docker access' &&
-                docker version &&
-                docker info &&
-
-                echo 'Building and pushing image' &&
-                AZ_CLIENT_ID='$AZ_CLIENT_ID' \
-                AZ_CLIENT_SECRET='$AZ_CLIENT_SECRET' \
-                AZ_TENANT_ID='$AZ_TENANT_ID' \
-                ACR_NAME='$ACR_NAME' \
-                IMAGE_NAME='$IMAGE_NAME' \
-                IMAGE_TAG='$IMAGE_TAG' \
-                bash -s < terraform/scripts/docker-build-push.sh
-              "
-            '''
+            ssh -o StrictHostKeyChecking=no vinadmin@${DOCKER_SERVER_IP} \
+              AZ_CLIENT_ID="$AZ_CLIENT_ID" \
+              AZ_CLIENT_SECRET="$AZ_CLIENT_SECRET" \
+              AZ_TENANT_ID="$AZ_TENANT_ID" \
+              ACR_NAME="$ACR_NAME" \
+              IMAGE_NAME="$IMAGE_NAME" \
+              IMAGE_TAG="$IMAGE_TAG" \
+              'bash -s' < terraform/scripts/docker-build-push.sh
+          '''
       }
     }
   }
