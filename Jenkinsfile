@@ -100,6 +100,7 @@ pipeline {
             string(credentialsId: 'azure-sp-tenant-id',     variable: 'AZ_TENANT_ID')
           ]) {
             sh """
+             sh """
               ssh -o StrictHostKeyChecking=no ${DOCKER_USER}@${DOCKER_HOST} '
                 set -e
 
@@ -110,9 +111,9 @@ pipeline {
 
                 az acr login --name ${ACR_NAME}
 
-                docker build \
+                tar -czf - . | docker build \
                   --build-arg APP_VERSION=${IMAGE_TAG} \
-                  -t ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG} .
+                  -t ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG} -
 
                 docker push ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG}
               '
