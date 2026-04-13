@@ -144,13 +144,13 @@ resource "azurerm_linux_virtual_machine" "docker" {
   admin_ssh_key {
     username   = var.admin_username
     public_key = tls_private_key.jenkins_docker_ssh.public_key_openssh
-}
+  }
 
-# Laptop → Docker (temporary / dev access)
+  # Laptop → Docker (temporary / dev access)
   admin_ssh_key {
     username   = var.admin_username
     public_key = var.ssh_public_key
-}
+  }
 
   os_disk {
     caching              = "ReadWrite"

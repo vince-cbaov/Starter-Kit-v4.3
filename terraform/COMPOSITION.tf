@@ -127,7 +127,7 @@ module "compute" {
   # REQUIRED: passed from Key Vault module
   key_vault_id = module.kv.kv_id
 
-  
+
   depends_on = [
     time_sleep.kv_rbac_wait
   ]
