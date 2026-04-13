@@ -103,7 +103,7 @@ pipeline {
               ssh -o StrictHostKeyChecking=no ${DOCKER_USER}@${DOCKER_HOST} '
                 set -e
 
-                az login --identity
+                az login --identity --client-id 8392ace3-2d41-48b4-b0fe-9fd7bd453524
 
                 az acr login --name ${ACR_NAME}
 
