@@ -103,10 +103,7 @@ pipeline {
               ssh -o StrictHostKeyChecking=no ${DOCKER_USER}@${DOCKER_HOST} '
                 set -e
 
-                az login --service-principal \
-                  -u "$AZ_CLIENT_ID" \
-                  -p "$AZ_CLIENT_SECRET" \
-                  --tenant "$AZ_TENANT_ID"
+                az login --identity
 
                 az acr login --name ${ACR_NAME}
 
