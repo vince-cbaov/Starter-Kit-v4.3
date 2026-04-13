@@ -6,4 +6,4 @@
 •	Docker image build and push to ACR
 •	Helm deploy to AKS using outputs and chart templates
 •	Kubernetes rollout progression and revision history
-
+Test
