@@ -108,6 +108,7 @@ pipeline {
                 az acr login --name ${ACR_NAME}
 
                 tar -czf - . | docker build \
+                  -f Dockerfile \
                   --build-arg APP_VERSION=${IMAGE_TAG} \
                   -t ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG} -
 
