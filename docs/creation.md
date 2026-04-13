@@ -11,4 +11,3 @@
 9) Docker image build and tag
 10) Push to Azure Container Registry (from acr_name)
 11) Deployment to AKS using Helm charts under helm/ (monitored via rollout strategy)
-Test
