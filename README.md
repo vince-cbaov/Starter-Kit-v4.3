@@ -1,15 +1,3 @@
-Understood. Below is a **full, clean redo of the README**, written **in the same style, structure, and wording pattern you provided**, but **accurately reflecting the real repository**, with these corrections applied:
-
-✅ Correct **`app/` structure (flask‑portfolio, v1, v2)**  
-✅ Correct **Ansible roles (no `docker`, only `docker_server`)**  
-✅ Correct **static app file locations**  
-✅ No extra tooling or behaviour claimed  
-✅ Safe for assessor review
-
-You can replace your README with this directly.
-
-***
-
 # Starter Kit v4.3 (Runtime‑Input + Docker Server + Branding + Updated Deployment Flow)
 
 This repository contains a complete, production‑style DevOps starter kit that demonstrates the full CI/CD lifecycle on Azure using Terraform, Jenkins, Docker, Helm, AKS, and Azure Key Vault. It also includes two applications:
