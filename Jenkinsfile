@@ -5,8 +5,6 @@ pipeline {
     timestamps()
     disableConcurrentBuilds()
     buildDiscarder(logRotator(numToKeepStr: '30'))
-
-    // IMPORTANT: avoid double checkout (fixes hidden failure)
     skipDefaultCheckout()
   }
 
@@ -27,7 +25,7 @@ pipeline {
     DOCKER_HOST = "10.10.1.4"
     DOCKER_USER = "vinadmin"
 
-    // AKS
+    // AKS configuration
     AKS_RG     = "sk-dev2-rg"
     AKS_NAME   = "sk-dev2-aks"
     HELM_CHART = "helm/myapp"
@@ -42,6 +40,22 @@ pipeline {
       }
     }
 
+    stage('Bootstrap Azure Identity') {
+      steps {
+        script {
+          def output = powershell(
+            script: '.\\scripts\\bootstrap-identity.ps1',
+            returnStdout: true
+          ).trim()
+
+          output.split("\n").each { line ->
+            def (key, value) = line.split("=", 2)
+            env."${key}" = value
+          }
+        }
+      }
+    }
+
     stage('Prepare version') {
       steps {
         script {
@@ -49,7 +63,7 @@ pipeline {
           echo "Resolved branch: ${branch}"
           echo "Raw VERSION param: '${params.VERSION}'"
 
-          // Normalize VERSION (handles null + empty string)
+          // Normalize VERSION (handles null and empty)
           def versionParam = params.VERSION
           if (versionParam == null || versionParam.trim().length() == 0) {
             versionParam = 'auto'
@@ -68,9 +82,8 @@ pipeline {
             resolvedTag = 'v1'
           }
 
-          //  Export ONCE (authoritative)
+          // Export once (authoritative)
           env.IMAGE_TAG = resolvedTag
-
           echo "Resolved IMAGE_TAG=${env.IMAGE_TAG}"
         }
       }
@@ -89,32 +102,22 @@ pipeline {
     }
 
     stage('Build & Push Image (Docker VM)') {
-      when {
-        expression { env.IMAGE_TAG?.trim() }
-      }
       steps {
         sshagent(credentials: ['docker-server-ssh']) {
-          withCredentials([
-            string(credentialsId: 'azure-sp-client-id',     variable: 'AZ_CLIENT_ID'),
-            string(credentialsId: 'azure-sp-client-secret', variable: 'AZ_CLIENT_SECRET'),
-            string(credentialsId: 'azure-sp-tenant-id',     variable: 'AZ_TENANT_ID')
-          ]) {
-            sh """
-                  tar -czf - . | ssh -o StrictHostKeyChecking=no ${DOCKER_USER}@${DOCKER_HOST} '
-                    set -e
+          sh """
+            tar -czf - . | ssh -o StrictHostKeyChecking=no ${DOCKER_USER}@${DOCKER_HOST} '
+              set -e
+              az login --identity
+              az acr login --name ${ACR_NAME}
 
-                    az login --identity --client-id 16254ace-2886-484f-8d4f-ce31abfd1be8
-                    az acr login --name ${ACR_NAME}
+              docker build \
+                -f Dockerfile \
+                --build-arg APP_VERSION=${IMAGE_TAG} \
+                -t ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG} -
 
-                    docker build \
-                      -f Dockerfile \
-                      --build-arg APP_VERSION=${IMAGE_TAG} \
-                      -t ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG} -
-
-                    docker push ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG}
-                  '
-                """
-          }
+              docker push ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG}
+            '
+          """
         }
       }
     }
@@ -141,15 +144,10 @@ pipeline {
     }
 
     stage('Deploy to AKS') {
-      when {
-        expression { env.IMAGE_TAG?.trim() }
-      }
       steps {
         sh '''
           set -e
-
-          # Login on the Jenkins VM using the SAME UAMI
-          az login --identity --client-id 16254ace-2886-484f-8d4f-ce31abfd1be8
+          az login --identity
 
           az aks get-credentials \
             --resource-group "$AKS_RG" \
@@ -166,7 +164,7 @@ pipeline {
             --set image.repository="$ACR_NAME.azurecr.io/$IMAGE_NAME" \
             --set image.tag="$IMAGE_TAG" \
             --wait \
-            --timeout 5m
+            --timeout 10m
         '''
       }
     }
@@ -174,10 +172,10 @@ pipeline {
 
   post {
     success {
-      echo " Deployment of ${env.IMAGE_TAG} completed successfully"
+      echo "Deployment of ${env.IMAGE_TAG} completed successfully"
     }
     failure {
-      echo " Pipeline failed for ${env.IMAGE_TAG ?: 'unknown'}"
+      echo "Pipeline failed for ${env.IMAGE_TAG ?: 'unknown'}"
     }
   }
 }
