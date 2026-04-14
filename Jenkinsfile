@@ -24,7 +24,7 @@ pipeline {
     IMAGE_NAME = "myapp"
 
     // Docker build VM
-    DOCKER_HOST = "10.10.1.5"
+    DOCKER_HOST = "10.10.1.4"
     DOCKER_USER = "vinadmin"
 
     // AKS
