@@ -149,7 +149,7 @@ pipeline {
           set -e
 
           # Login on the Jenkins VM using the SAME UAMI
-          az login --identity --client-id 8392ace3-2d41-48b4-b0fe-9fd7bd453524
+          az login --identity --client-id 16254ace-2886-484f-8d4f-ce31abfd1be8
 
           az aks get-credentials \
             --resource-group "$AKS_RG" \
