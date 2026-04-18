@@ -11,5 +11,5 @@ resource "azurerm_federated_identity_credential" "myapp_fic" {
   audience  = ["api://AzureADTokenExchange"]
   issuer    = var.issuer
   subject   = var.subject
-  parent_id = azurerm_user_assigned_identity.workload.id
+  user_assigned_identity_id = azurerm_user_assigned_identity.workload.id
 }
