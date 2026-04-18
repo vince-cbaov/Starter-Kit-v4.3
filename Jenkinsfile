@@ -22,7 +22,7 @@ pipeline {
     IMAGE_NAME = "myapp"
 
     // Docker build VM
-    DOCKER_HOST = "10.10.1.4"
+    DOCKER_HOST = "10.10.1.5"
     DOCKER_USER = "vinadmin"
 
     // AKS configuration
@@ -63,13 +63,11 @@ pipeline {
           echo "Resolved branch: ${branch}"
           echo "Raw VERSION param: '${params.VERSION}'"
 
-          // Normalize VERSION (handles null and empty)
           def versionParam = params.VERSION
-          if (versionParam == null || versionParam.trim().length() == 0) {
+          if (!versionParam?.trim()) {
             versionParam = 'auto'
           }
 
-          // Resolve final image tag
           def resolvedTag
           if (versionParam == 'auto') {
             resolvedTag = (branch == 'main') ? 'v1' : 'v2'
@@ -77,12 +75,10 @@ pipeline {
             resolvedTag = versionParam
           }
 
-          // Absolute safety net
-          if (resolvedTag == null || resolvedTag.trim().length() == 0) {
+          if (!resolvedTag?.trim()) {
             resolvedTag = 'v1'
           }
 
-          // Export once (authoritative)
           env.IMAGE_TAG = resolvedTag
           echo "Resolved IMAGE_TAG=${env.IMAGE_TAG}"
         }
@@ -104,20 +100,21 @@ pipeline {
     stage('Build & Push Image (Docker VM)') {
       steps {
         sshagent(credentials: ['docker-server-ssh']) {
-          sh """
-            tar -czf - . | ssh -o StrictHostKeyChecking=no ${DOCKER_USER}@${DOCKER_HOST} '
+          sh '''
+            set -e
+            tar -czf - . | ssh -o StrictHostKeyChecking=no '"${DOCKER_USER}@${DOCKER_HOST}"' '
               set -e
               az login --identity
-              az acr login --name ${ACR_NAME}
+              az acr login --name '"${ACR_NAME}"'
 
               docker build \
                 -f Dockerfile \
-                --build-arg APP_VERSION=${IMAGE_TAG} \
-                -t ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG} -
+                --build-arg APP_VERSION='"${IMAGE_TAG}"' \
+                -t '"${ACR_NAME}"'.azurecr.io/'"${IMAGE_NAME}"':'"${IMAGE_TAG}"' -
 
-              docker push ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG}
+              docker push '"${ACR_NAME}"'.azurecr.io/'"${IMAGE_NAME}"':'"${IMAGE_TAG}"'
             '
-          """
+          '''
         }
       }
     }
@@ -154,10 +151,6 @@ pipeline {
             --name "$AKS_NAME" \
             --overwrite-existing
 
-          kubectl delete deployment myapp \
-            --namespace "$NAMESPACE" \
-            --ignore-not-found
-
           helm upgrade --install myapp "$HELM_CHART" \
             --namespace "$NAMESPACE" \
             --create-namespace \
@@ -172,10 +165,10 @@ pipeline {
 
   post {
     success {
-      echo "Deployment of ${env.IMAGE_TAG} completed successfully"
+      echo " Deployment of ${env.IMAGE_TAG} completed successfully"
     }
     failure {
-      echo "Pipeline failed for ${env.IMAGE_TAG ?: 'unknown'}"
+      echo " Pipeline failed for ${env.IMAGE_TAG ?: 'unknown'}"
     }
   }
 }

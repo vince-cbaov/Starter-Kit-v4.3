@@ -6,7 +6,7 @@ param (
     [string]$AcrName        = "starterkitacr",
     [string]$ServiceAccount = "myapp-sa",
     [string]$Namespace      = "default",
-    [string]$ClientId       = "8f2dd0f1-6e06-4fdc-8ebe-5440fec08058",
+    [string]$ClientId       = "e5f21f47-6236-455a-af6d-79277ee40d36",
     [string]$UamiName       = "sk-dev2-uami"
 )
 

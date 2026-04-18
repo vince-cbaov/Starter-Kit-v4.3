@@ -5,11 +5,9 @@ metadata:
 spec:
   replicas: {{ .Values.replicaCount }}
 
-  
   strategy:
     type: RollingUpdate
   
-
   selector:
     matchLabels:
       app: myapp
@@ -23,7 +21,6 @@ spec:
     spec:
       
       serviceAccountName: myapp-sa
-
 
       # nodeSelector / tolerations belong here (NOT inside volumeAttributes)
       nodeSelector:

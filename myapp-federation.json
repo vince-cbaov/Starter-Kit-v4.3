@@ -1,8 +1,0 @@
-{
-  "name": "myapp-sa-federation",
-  "issuer": "https://northeurope.oic.prod-aks.azure.com/ec7789f0-7ef2-4ff6-89b1-a74d3fc8f81c/02571c03-ba1e-4ccc-b092-a6b33e8e30c0/",
-  "subject": "system:serviceaccount:default:myapp-sa",
-  "audiences": [
-    "api://AzureADTokenExchange"
-  ]
-}
