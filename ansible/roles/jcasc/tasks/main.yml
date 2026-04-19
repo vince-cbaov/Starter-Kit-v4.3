@@ -27,12 +27,19 @@
     update_cache: yes
   become: true
 
+- name: Download Jenkins Plugin CLI JAR
+  get_url:
+    url: https://github.com/jenkinsci/plugin-installation-manager-tool/releases/latest/download/jenkins-plugin-manager.jar
+    dest: /usr/local/lib/jenkins-plugin-manager.jar
+    mode: "0755"
+  become: true
 
 - name: Install Jenkins plugins from plugins.txt (APT Jenkins)
   command: >
-    jenkins-plugin-cli
+    java -jar /usr/local/lib/jenkins-plugin-manager.jar
     --plugin-file {{ role_path }}/files/plugins.txt
     --plugin-dir /var/lib/jenkins/plugins
+    --verbose
   become: true
   environment:
     JENKINS_HOME: /var/lib/jenkins
