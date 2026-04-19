@@ -42,13 +42,13 @@ $federationFile = "$PSScriptRoot\myapp-federation.json"
 # -------------------------
 # 3. Create Federated Credential (idempotent)
 # -------------------------
-$federations = az ad app federated-credential list `
+$federations = az identity federated-credential list `
   --id $ClientId `
   --query "[?subject=='system:serviceaccount:${Namespace}:${ServiceAccount}']" `
   -o tsv
 
 if (-not $federations) {
-    az ad app federated-credential create `
+    az identity federated-credential create `
         --id $ClientId `
         --parameters $federationFile
 }
