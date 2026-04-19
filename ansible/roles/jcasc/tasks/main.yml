@@ -21,16 +21,6 @@
   become: true
 
 
-# PLUGIN INSTALLATION (THIS IS THE CRITICAL MISSING STEP)
-
-- name: Download jenkins-plugin-cli
-  get_url:
-    url: https://repo.jenkins-ci.org/public/io/jenkins/jenkins-plugin-cli/2.13.0/jenkins-plugin-cli-2.13.0.jar
-    dest: /usr/local/bin/jenkins-plugin-cli.jar
-    mode: "0755"
-  become: true
-
-
 - name: Install Jenkins plugins from plugins.txt
   command: >
     java -jar /usr/local/bin/jenkins-plugin-cli.jar
