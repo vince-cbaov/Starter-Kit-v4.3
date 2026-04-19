@@ -43,8 +43,11 @@ pipeline {
     stage('Bootstrap Azure Identity') {
       steps {
         script {
-          def output = powershell(
-            script: '.\\scripts\\bootstrap-identity.ps1',
+          def output = sh(
+            script: '''
+              set -e
+              pwsh -File scripts/bootstrap-identity.ps1
+            ''',
             returnStdout: true
           ).trim()
 
