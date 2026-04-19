@@ -22,6 +22,11 @@ variable "trusted_cidr" {
   description = "CIDR allowed to access exposed services (NSG rules)"
 }
 
+variable "subscription_id" {
+  type        = string
+  description = "Azure Subscription ID for role assignment scope"
+}
+
 # ---------------------------
 # Compute / VM Settings
 # ---------------------------

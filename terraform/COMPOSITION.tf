@@ -70,6 +70,7 @@ module "identity" {
 
   issuer  = module.aks.oidc_issuer_url
   subject = "system:serviceaccount:default:myapp-sa"
+  subscription_id = data.azurerm_subscription.current.subscription_id
 }
 
 # --------------------
