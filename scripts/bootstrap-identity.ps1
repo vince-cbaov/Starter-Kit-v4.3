@@ -43,14 +43,17 @@ $federationFile = "$PSScriptRoot\myapp-federation.json"
 # 3. Create Federated Credential (idempotent)
 # -------------------------
 $federations = az identity federated-credential list `
-  --id $ClientId `
+  --identity-name $UamiName `
+  --resource-group $ResourceGroup `
   --query "[?subject=='system:serviceaccount:${Namespace}:${ServiceAccount}']" `
   -o tsv
 
 if (-not $federations) {
     az identity federated-credential create `
-        --id $ClientId `
-        --parameters $federationFile
+      --name "myapp-fic" `
+      --identity-name $UamiName `
+      --resource-group $ResourceGroup `
+      --parameters $federationFile
 }
 
 # -------------------------
