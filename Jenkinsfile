@@ -52,10 +52,17 @@ pipeline {
         ).trim()
 
         if (output) {
+          def envList = []
+
           output.split("\n").each { line ->
             if (line.contains("=")) {
-              def (key, value) = line.split("=", 2)
-              env[key] = value
+              envList.add(line)
+            }
+          }
+
+          if (!envList.isEmpty()) {
+            withEnv(envList) {
+              echo "Bootstrap environment variables loaded"
             }
           }
         }
