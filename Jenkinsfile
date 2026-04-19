@@ -40,24 +40,28 @@ pipeline {
       }
     }
 
-    stage('Bootstrap Azure Identity') {
-      steps {
-        script {
-          def output = sh(
-            script: '''
-              set -e
-              pwsh -File scripts/bootstrap-identity.ps1
-            ''',
-            returnStdout: true
-          ).trim()
+   stage('Bootstrap Azure Identity') {
+    steps {
+      script {
+        def output = sh(
+          script: '''
+            set -e
+            pwsh -File scripts/bootstrap-identity.ps1
+          ''',
+          returnStdout: true
+        ).trim()
 
+        if (output) {
           output.split("\n").each { line ->
-            def (key, value) = line.split("=", 2)
-            env."${key}" = value
+            if (line.contains("=")) {
+              def (key, value) = line.split("=", 2)
+              env[key] = value
+            }
           }
         }
       }
     }
+  }
 
     stage('Prepare version') {
       steps {
