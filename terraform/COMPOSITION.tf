@@ -124,6 +124,7 @@ module "compute" {
   admin_username = var.admin_username
   ssh_public_key = var.ssh_public_key
   trusted_cidr   = "45.150.144.70/32"
+  user_assigned_identity_id = module.identity.uami_id
 
   # REQUIRED: passed from Key Vault module
   key_vault_id = module.kv.kv_id

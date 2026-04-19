@@ -186,8 +186,12 @@ resource "azurerm_linux_virtual_machine" "jenkins" {
   ]
 
   identity {
-    type = "SystemAssigned"
-  }
+  type = "UserAssigned"
+
+  identity_ids = [
+    azurerm_user_assigned_identity.workload.id
+  ]
+}
 
   admin_ssh_key {
     username   = var.admin_username

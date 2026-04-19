@@ -55,6 +55,11 @@ variable "trusted_cidr" {
   type        = string
 }
 
+variable "user_assigned_identity_id" {
+  description = "User Assigned Managed Identity ID for Jenkins VM"
+  type        = string
+}
+
 # ---------------------------
 # Key Vault Integration
 # ---------------------------
