@@ -1,7 +1,7 @@
 # ansible/roles/jcasc/tasks/main.yml
 ---
-# Ensure JCasC directory exists
-- name: Ensure Jenkins JCasC directory exists
+
+- name: Ensure JCasC directory exists
   file:
     path: /var/lib/jenkins/casc_configs
     state: directory
@@ -11,8 +11,7 @@
   become: true
 
 
-# Deploy JCasC config
-- name: Deploy Jenkins Configuration as Code file
+- name: Deploy JCasC config
   copy:
     src: jenkins.yaml
     dest: /var/lib/jenkins/casc_configs/jenkins.yaml
@@ -22,29 +21,39 @@
   become: true
 
 
-#  DOWNLOAD THE OFFICIAL PLUGIN MANAGER (THIS IS THE ONLY SUPPORTED WAY)
-- name: Download Jenkins Plugin Manager
-  get_url:
-    url: https://github.com/jenkinsci/plugin-installation-manager-tool/releases/latest/download/jenkins-plugin-manager.jar
-    dest: /usr/local/lib/jenkins-plugin-manager.jar
+# PROVEN PLUGIN INSTALL METHOD (NO EXTERNAL DOWNLOADS)
+- name: Install plugins via init.groovy.d
+  copy:
+    src: install-plugins.groovy
+    dest: /var/lib/jenkins/init.groovy.d/install-plugins.groovy
+    owner: jenkins
+    group: jenkins
+    mode: "0644"
+  become: true
+
+
+- name: Ensure systemd drop-in exists
+  file:
+    path: /etc/systemd/system/jenkins.service.d
+    state: directory
     mode: "0755"
   become: true
 
 
-#  INSTALL PLUGINS USING THE JAR (NO jenkins-plugin-cli BINARY)
-- name: Install Jenkins plugins from plugins.txt
-  command: >
-    java -jar /usr/local/lib/jenkins-plugin-manager.jar
-    --plugin-file {{ role_path }}/files/plugins.txt
-    --plugin-dir /var/lib/jenkins/plugins
+- name: Configure Jenkins environment for JCasC
+  copy:
+    dest: /etc/systemd/system/jenkins.service.d/jcasc-env.conf
+    content: |
+      [Service]
+      Environment="CASC_JENKINS_CONFIG=/var/lib/jenkins/casc_configs/jenkins.yaml"
+      Environment="GITHUB_USERNAME={{ github_username }}"
+      Environment="GITHUB_TOKEN={{ github_token }}"
   become: true
-  environment:
-    JENKINS_HOME: /var/lib/jenkins
-    
 
-- name: Reload systemd and restart Jenkins
+
+- name: Restart Jenkins
   systemd:
-    daemon_reload: true
     name: jenkins
+    daemon_reload: true
     state: restarted
   become: true
