@@ -21,7 +21,28 @@
   become: true
 
 
-# 🔑 THIS IS THE MISSING PIECE
+# PLUGIN INSTALLATION (THIS IS THE CRITICAL MISSING STEP)
+
+- name: Download jenkins-plugin-cli
+  get_url:
+    url: https://repo.jenkins-ci.org/public/io/jenkins/jenkins-plugin-cli/2.13.0/jenkins-plugin-cli-2.13.0.jar
+    dest: /usr/local/bin/jenkins-plugin-cli.jar
+    mode: "0755"
+  become: true
+
+
+- name: Install Jenkins plugins from plugins.txt
+  command: >
+    java -jar /usr/local/bin/jenkins-plugin-cli.jar
+    --plugin-file {{ role_path }}/files/plugins.txt
+    --plugin-dir /var/lib/jenkins/plugins
+  become: true
+  become_user: jenkins
+  environment:
+    JENKINS_HOME: /var/lib/jenkins
+
+
+# THIS IS THE MISSING PIECE
 - name: Ensure systemd drop-in directory for Jenkins exists
   file:
     path: /etc/systemd/system/jenkins.service.d
