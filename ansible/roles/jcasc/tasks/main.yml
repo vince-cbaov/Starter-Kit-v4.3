@@ -20,6 +20,13 @@
     mode: "0644"
   become: true
 
+- name: Install Jenkins Plugin CLI
+  apt:
+    name: jenkins-plugin-cli
+    state: present
+    update_cache: yes
+  become: true
+
 
 - name: Install Jenkins plugins from plugins.txt (APT Jenkins)
   command: >
