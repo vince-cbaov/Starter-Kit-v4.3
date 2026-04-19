@@ -17,3 +17,7 @@ variable "issuer" {
 variable "subject" {
   type = string
 }
+
+variable "subscription_id" {
+  type = string
+}

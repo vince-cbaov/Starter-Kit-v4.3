@@ -13,3 +13,9 @@ resource "azurerm_federated_identity_credential" "myapp_fic" {
   subject   = var.subject
   user_assigned_identity_id = azurerm_user_assigned_identity.workload.id
 }
+
+resource "azurerm_role_assignment" "uami_subscription_reader" {
+  scope                = "/subscriptions/${var.subscription_id}"
+  role_definition_name = "Reader"
+  principal_id         = azurerm_user_assigned_identity.workload.principal_id
+}
