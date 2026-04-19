@@ -14,7 +14,6 @@ def plugins = [
   "docker-workflow",
   "kubernetes",
   "kubernetes-cli",
-  "azure-cli",
   "azure-credentials",
   "azure-keyvault",
 ]
