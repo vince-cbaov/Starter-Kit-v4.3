@@ -21,13 +21,12 @@
   become: true
 
 
-- name: Install Jenkins plugins from plugins.txt
+- name: Install Jenkins plugins from plugins.txt (APT Jenkins)
   command: >
-    java -jar /usr/local/bin/jenkins-plugin-cli.jar
+    jenkins-plugin-cli
     --plugin-file {{ role_path }}/files/plugins.txt
     --plugin-dir /var/lib/jenkins/plugins
   become: true
-  become_user: jenkins
   environment:
     JENKINS_HOME: /var/lib/jenkins
 
