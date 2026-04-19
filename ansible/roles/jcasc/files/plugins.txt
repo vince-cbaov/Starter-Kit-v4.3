@@ -1,0 +1,28 @@
+# Pipelines
+workflow-aggregator
+pipeline-stage-view
+
+# SCM
+git
+github
+
+# Credentials
+credentials
+credentials-binding
+ssh-agent
+ssh-credentials
+
+# Docker
+docker-workflow
+
+# Kubernetes / AKS
+kubernetes
+kubernetes-cli
+
+# Azure
+azure-cli
+azure-credentials
+azure-keyvault
+
+# Jenkins Configuration as Code
+configuration-as-code

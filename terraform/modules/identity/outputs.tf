@@ -16,5 +16,5 @@ output "uami_id" {
 
 output "workload_uami_id" {
   description = "ID of the User Assigned Managed Identity for workload/Jenkins"
-  value      = azurerm_user_assigned_identity.workload.id
+  value       = azurerm_user_assigned_identity.workload.id
 }

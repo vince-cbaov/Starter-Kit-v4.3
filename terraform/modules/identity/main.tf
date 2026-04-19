@@ -7,10 +7,10 @@ resource "azurerm_user_assigned_identity" "workload" {
 }
 
 resource "azurerm_federated_identity_credential" "myapp_fic" {
-  name      = "myapp-fic"
-  audience  = ["api://AzureADTokenExchange"]
-  issuer    = var.issuer
-  subject   = var.subject
+  name                      = "myapp-fic"
+  audience                  = ["api://AzureADTokenExchange"]
+  issuer                    = var.issuer
+  subject                   = var.subject
   user_assigned_identity_id = azurerm_user_assigned_identity.workload.id
 }
 

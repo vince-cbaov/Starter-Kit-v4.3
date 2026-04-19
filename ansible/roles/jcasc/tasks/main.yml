@@ -1,18 +1,49 @@
 # ansible/roles/jcasc/tasks/main.yml
 ---
-- name: Ensure Jenkins config directory exists
+
+- name: Ensure Jenkins JCasC directory exists
   file:
-    path: /var/jenkins_home/casc_configs
+    path: /var/lib/jenkins/casc_configs
     state: directory
     owner: jenkins
     group: jenkins
     mode: "0755"
+  become: true
 
-# TODO: copy your YAML(s) into casc_configs and point JCasC to them
-# - name: Deploy JCasC bundle
-#   copy:
-#     src: files/jenkins.yaml
-#     dest: /var/jenkins_home/casc_configs/jenkins.yaml
-#     owner: jenkins
-#     group: jenkins
-#     mode: "0644"
+
+- name: Deploy Jenkins Configuration as Code file
+  copy:
+    src: jenkins.yaml
+    dest: /var/lib/jenkins/casc_configs/jenkins.yaml
+    owner: jenkins
+    group: jenkins
+    mode: "0644"
+  become: true
+
+
+# 🔑 THIS IS THE MISSING PIECE
+- name: Ensure systemd drop-in directory for Jenkins exists
+  file:
+    path: /etc/systemd/system/jenkins.service.d
+    state: directory
+    mode: "0755"
+  become: true
+
+
+- name: Configure Jenkins environment variables for JCasC and GitHub
+  copy:
+    dest: /etc/systemd/system/jenkins.service.d/jcasc-env.conf
+    content: |
+      [Service]
+      Environment="CASC_JENKINS_CONFIG=/var/lib/jenkins/casc_configs/jenkins.yaml"
+      Environment="GITHUB_USERNAME={{ github_username }}"
+      Environment="GITHUB_TOKEN={{ github_token }}"
+  become: true
+
+
+- name: Reload systemd and restart Jenkins
+  systemd:
+    daemon_reload: true
+    name: jenkins
+    state: restarted
+  become: true

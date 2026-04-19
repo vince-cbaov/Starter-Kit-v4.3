@@ -68,8 +68,8 @@ module "identity" {
   resource_group_name = module.rg.name
   location            = module.rg.location
 
-  issuer  = module.aks.oidc_issuer_url
-  subject = "system:serviceaccount:default:myapp-sa"
+  issuer          = module.aks.oidc_issuer_url
+  subject         = "system:serviceaccount:default:myapp-sa"
   subscription_id = data.azurerm_subscription.current.subscription_id
 }
 
@@ -117,13 +117,13 @@ module "compute" {
   create_vms       = var.create_vms
   enable_docker_vm = var.enable_docker_vm
 
-  rg_name        = module.rg.name
-  location       = module.rg.location
-  name_prefix    = var.name_prefix
-  subnet_id      = module.network.subnet_id
-  admin_username = var.admin_username
-  ssh_public_key = var.ssh_public_key
-  trusted_cidr   = "45.150.144.70/32"
+  rg_name                   = module.rg.name
+  location                  = module.rg.location
+  name_prefix               = var.name_prefix
+  subnet_id                 = module.network.subnet_id
+  admin_username            = var.admin_username
+  ssh_public_key            = var.ssh_public_key
+  trusted_cidr              = "45.150.144.70/32"
   user_assigned_identity_id = module.identity.uami_id
 
   # REQUIRED: passed from Key Vault module

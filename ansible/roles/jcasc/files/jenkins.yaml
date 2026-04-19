@@ -1,0 +1,23 @@
+jenkins:
+  systemMessage: "Starter-Kit v4.3 - Jenkins managed via JCasC"
+  numExecutors: 0
+  mode: NORMAL
+
+unclassified:
+  location:
+    url: "http://20.166.91.41:8080/"
+    adminAddress: "vfalconer@hotmail.co.uk"
+
+credentials:
+  system:
+    domainCredentials:
+      - domain:
+          name: "global"
+          description: "Global credentials"
+        credentials:
+          - usernamePassword:
+              scope: GLOBAL
+              id: github-credentials
+              username: "${GITHUB_USERNAME}"
+              password: "${GITHUB_TOKEN}"
+              description: "GitHub access token"
