@@ -12,6 +12,8 @@ param (
 
 $ErrorActionPreference = "Stop"
 
+az login --identity --allow-no-subscriptions
+
 az account set --subscription $SubscriptionId
 
 # -------------------------
