@@ -19,6 +19,17 @@
     group: jenkins
     mode: "0644"
   become: true
+  
+
+# Ensure Jenkins init.groovy.d directory exists
+- name: Ensure Jenkins init.groovy.d directory exists
+  file:
+    path: /var/lib/jenkins/init.groovy.d
+    state: directory
+    owner: jenkins
+    group: jenkins
+    mode: "0755"
+  become: true
 
 
 # PROVEN PLUGIN INSTALL METHOD (NO EXTERNAL DOWNLOADS)
