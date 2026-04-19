@@ -189,7 +189,7 @@ resource "azurerm_linux_virtual_machine" "jenkins" {
   type = "UserAssigned"
 
   identity_ids = [
-    azurerm_user_assigned_identity.workload.id
+    var.user_assigned_identity_id
   ]
 }
 
