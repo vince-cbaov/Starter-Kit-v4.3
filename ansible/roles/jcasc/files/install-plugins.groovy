@@ -3,15 +3,20 @@ import hudson.model.UpdateCenter
 
 def plugins = [
   "configuration-as-code",
+  "workflow-aggregator",
+  "pipeline-stage-view",
   "git",
   "github",
   "credentials",
   "credentials-binding",
+  "ssh-agent",
+  "ssh-credentials",
   "docker-workflow",
   "kubernetes",
+  "kubernetes-cli",
   "azure-cli",
   "azure-credentials",
-  "azure-keyvault"
+  "azure-keyvault",
 ]
 
 def instance = Jenkins.instance
