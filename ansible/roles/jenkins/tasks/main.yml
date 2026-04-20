@@ -225,12 +225,43 @@
     update_cache: true
   become: true
 
-# Install PowerShell Core (required for pwsh scripts)
-- name: Install PowerShell
-  apt:
-    name: powershell
+# -------------------------------------------------
+# PowerShell (Microsoft official repo)
+# -------------------------------------------------
+
+- name: Ensure Microsoft keyrings directory exists
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+  become: true
+
+- name: Download Microsoft signing key (PowerShell)
+  get_url:
+    url: https://packages.microsoft.com/keys/microsoft.asc
+    dest: /etc/apt/keyrings/microsoft.asc
+    mode: "0644"
+  become: true
+
+- name: Convert Microsoft signing key to GPG format
+  command: >
+    gpg --dearmor
+    --yes
+    -o /etc/apt/keyrings/microsoft.gpg
+    /etc/apt/keyrings/microsoft.asc
+  args:
+    creates: /etc/apt/keyrings/microsoft.gpg
+  become: true
+
+- name: Add Microsoft PowerShell APT repository
+  apt_repository:
+    repo: >
+      deb [signed-by=/etc/apt/keyrings/microsoft.gpg]
+      https://packages.microsoft.com/repos/microsoft-ubuntu-{{ ansible_distribution_release }}-prod
+      {{ ansible_distribution_release }}
+      main
+    filename: microsoft-powershell
     state: present
-    update_cache: true
   become: true
 
 
@@ -273,4 +304,8 @@
 - name: Verify git-secrets is installed
   shell: command -v git-secrets
   register: git_secrets_path
+  changed_when: false
+
+- name: Verify PowerShell Core is available
+  command: which pwsh
   changed_when: false
