@@ -114,21 +114,19 @@ pipeline {
     stage('Build & Push Image (Docker VM)') {
       steps {
         script {
-          // NORMALISE VARIABLES (THIS IS THE KEY FIX)
           def DOCKER_USER_CLEAN = env.DOCKER_USER.trim()
           def DOCKER_HOST_CLEAN = env.DOCKER_HOST.trim()
 
-          // Optional but very useful debug (remove once happy)
           echo "DOCKER_USER=[${DOCKER_USER_CLEAN}]"
           echo "DOCKER_HOST=[${DOCKER_HOST_CLEAN}]"
 
           sshagent(credentials: ['docker-server-ssh']) {
             sh """
               set -e
-              tar -czf - . | ssh -o StrictHostKeyChecking=no \
+              tar -czf - . | ssh -T -o StrictHostKeyChecking=no \
                 ${DOCKER_USER_CLEAN}@${DOCKER_HOST_CLEAN} << 'EOF'
                   set -e
-                  az login --identity
+                  az login --identity --allow-no-subscriptions
                   az acr login --name ${ACR_NAME}
 
                   docker build \
