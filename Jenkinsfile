@@ -113,22 +113,33 @@ pipeline {
 
     stage('Build & Push Image (Docker VM)') {
       steps {
-        sshagent(credentials: ['docker-server-ssh']) {
-          sh '''
-            set -e
-            tar -czf - . | ssh -o StrictHostKeyChecking=no '"${DOCKER_USER}@${DOCKER_HOST}"' '
+        script {
+          // NORMALISE VARIABLES (THIS IS THE KEY FIX)
+          def DOCKER_USER_CLEAN = env.DOCKER_USER.trim()
+          def DOCKER_HOST_CLEAN = env.DOCKER_HOST.trim()
+
+          // Optional but very useful debug (remove once happy)
+          echo "DOCKER_USER=[${DOCKER_USER_CLEAN}]"
+          echo "DOCKER_HOST=[${DOCKER_HOST_CLEAN}]"
+
+          sshagent(credentials: ['docker-server-ssh']) {
+            sh """
               set -e
-              az login --identity
-              az acr login --name '"${ACR_NAME}"'
+              tar -czf - . | ssh -o StrictHostKeyChecking=no \
+                ${DOCKER_USER_CLEAN}@${DOCKER_HOST_CLEAN} << 'EOF'
+                  set -e
+                  az login --identity
+                  az acr login --name ${ACR_NAME}
 
-              docker build \
-                -f Dockerfile \
-                --build-arg APP_VERSION='"${IMAGE_TAG}"' \
-                -t '"${ACR_NAME}"'.azurecr.io/'"${IMAGE_NAME}"':'"${IMAGE_TAG}"' -
+                  docker build \
+                    -f Dockerfile \
+                    --build-arg APP_VERSION=${IMAGE_TAG} \
+                    -t ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG} -
 
-              docker push '"${ACR_NAME}"'.azurecr.io/'"${IMAGE_NAME}"':'"${IMAGE_TAG}"'
-            '
-          '''
+                  docker push ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG}
+              EOF
+            """
+          }
         }
       }
     }
