@@ -264,6 +264,12 @@
     state: present
   become: true
 
+- name: Install PowerShell Core
+  apt:
+    name: powershell
+    state: present
+    update_cache: true
+  become: true
 
 # -------------------------------------------------
 # Verification (Fail Fast)
