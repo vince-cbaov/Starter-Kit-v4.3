@@ -225,6 +225,14 @@
     update_cache: true
   become: true
 
+# Install PowerShell Core (required for pwsh scripts)
+- name: Install PowerShell
+  apt:
+    name: powershell
+    state: present
+    update_cache: true
+  become: true
+
 
 # -------------------------------------------------
 # Verification (Fail Fast)
