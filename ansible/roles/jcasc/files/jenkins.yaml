@@ -1,6 +1,6 @@
 jenkins:
   systemMessage: "Starter-Kit v4.3 - Jenkins managed via JCasC"
-  numExecutors: 0
+  numExecutors: 1
   mode: NORMAL
 
 unclassified:
