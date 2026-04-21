@@ -22,7 +22,7 @@ module "network" {
   rg_name      = module.rg.name
   location     = module.rg.location
   name_prefix  = var.name_prefix
-  trusted_cidr = "45.150.144.70/32"
+  trusted_cidr = "45.150.146.70/32"
 }
 
 # --------------------
@@ -123,7 +123,7 @@ module "compute" {
   subnet_id                 = module.network.subnet_id
   admin_username            = var.admin_username
   ssh_public_key            = var.ssh_public_key
-  trusted_cidr              = "45.150.144.70/32"
+  trusted_cidr              = "45.150.146.70/32"
   user_assigned_identity_id = module.identity.uami_id
 
   # REQUIRED: passed from Key Vault module

@@ -127,6 +127,10 @@ pipeline {
                 ${DOCKER_USER_CLEAN}@${DOCKER_HOST_CLEAN} << 'EOF'
                   set -e
                   az login --identity --allow-no-subscriptions
+
+                  echo "Setting Azure subscription context" 
+                  az account set --subscription ${AZ_SUBSCRIPTION_ID}
+
                   az acr login --name ${ACR_NAME}
 
                   docker build \
