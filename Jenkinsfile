@@ -77,35 +77,6 @@ pipeline {
   }
 }
 
-  //  stage('Bootstrap Azure Identity') {
-  //   steps {
-  //     script {
-  //       def output = sh(
-  //         script: '''
-  //           set -e
-  //           pwsh -File scripts/bootstrap-identity.ps1
-  //         ''',
-  //         returnStdout: true
-  //       ).trim()
-
-  //       if (output) {
-  //         def envList = []
-
-  //         output.split("\n").each { line ->
-  //           if (line.contains("=")) {
-  //             envList.add(line)
-  //           }
-  //         }
-
-  //         if (!envList.isEmpty()) {
-  //           withEnv(envList) {
-  //             echo "Bootstrap environment variables loaded"
-  //           }
-  //         }
-  //       }
-  //     }
-  //   }
-  // }
 
     stage('Prepare version') {
       steps {
@@ -165,13 +136,12 @@ pipeline {
                   set -e
                   az login --identity --allow-no-subscriptions
 
-                  echo "Setting Azure subscription context" 
-                  az account set --subscription ${AZ_SUBSCRIPTION_ID}
+                  echo "Setting Azure subscription context"
+                  az account set --subscription ${env.AZ_SUBSCRIPTION_ID}
 
                   az acr login --name ${ACR_NAME}
 
                   docker build \
-                    -f Dockerfile \
                     --build-arg APP_VERSION=${IMAGE_TAG} \
                     -t ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG} -
 
@@ -183,6 +153,7 @@ pipeline {
       }
     }
 
+    
     stage('Quality & Security Gates (v2)') {
       when {
         expression { env.IMAGE_TAG == 'v2' }
