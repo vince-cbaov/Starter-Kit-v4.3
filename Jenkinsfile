@@ -50,25 +50,26 @@ pipeline {
 
         echo "Bootstrap output:\n${output}"
 
-        // Convert KEY=VALUE lines into Jenkins env vars
+        // Convert KEY=VALUE lines into a list Jenkins understands
+        def envVars = []
         output.split('\n').each { line ->
           if (line.contains('=')) {
-            def (key, value) = line.split('=', 2)
-            env[key.trim()] = value.trim()
+            envVars.add(line.trim())
           }
         }
 
-        // Hard guard – fail early if missing
-        if (!env.AZ_SUBSCRIPTION_ID) {
-          error "AZ_SUBSCRIPTION_ID was not set by bootstrap script"
-        }
+        withEnv(envVars) {
+          // Guardrail
+          if (!env.AZ_SUBSCRIPTION_ID) {
+            error "AZ_SUBSCRIPTION_ID was not set by bootstrap script"
+          }
 
-        echo "Bootstrap environment variables loaded"
-        echo "AZ_SUBSCRIPTION_ID=${env.AZ_SUBSCRIPTION_ID}"
+          echo "Bootstrap environment variables loaded"
+          echo "AZ_SUBSCRIPTION_ID=${env.AZ_SUBSCRIPTION_ID}"
+        }
       }
     }
   }
-
 
   //  stage('Bootstrap Azure Identity') {
   //   steps {
