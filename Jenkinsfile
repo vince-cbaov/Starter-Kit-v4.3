@@ -150,40 +150,6 @@ pipeline {
       }
     }
 
-    // stage('Build & Push Image (Docker VM)') {
-    //   steps {
-    //     script {
-    //       def DOCKER_USER_CLEAN = env.DOCKER_USER.trim()
-    //       def DOCKER_HOST_CLEAN = env.DOCKER_HOST.trim()
-
-    //       echo "DOCKER_USER=[${DOCKER_USER_CLEAN}]"
-    //       echo "DOCKER_HOST=[${DOCKER_HOST_CLEAN}]"
-
-    //       sshagent(credentials: ['docker-server-ssh']) {
-    //         sh """
-    //           set -e
-    //           tar -czf - . | ssh -T -o StrictHostKeyChecking=no \
-    //             ${DOCKER_USER_CLEAN}@${DOCKER_HOST_CLEAN} << 'EOF'
-    //               set -e
-    //               az login --identity --allow-no-subscriptions
-
-    //               echo "Setting Azure subscription context"
-    //               az account set --subscription ${env.AZ_SUBSCRIPTION_ID}
-
-    //               az acr login --name ${ACR_NAME}
-
-    //               docker build \
-    //                 --build-arg APP_VERSION=${IMAGE_TAG} \
-    //                 -t ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG} -
-
-    //               docker push ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG}
-    //           EOF
-    //         """
-    //       }
-    //     }
-    //   }
-    // }
-
 
     stage('Quality & Security Gates (v2)') {
       when {
