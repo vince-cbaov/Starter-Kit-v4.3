@@ -40,35 +40,65 @@ pipeline {
       }
     }
 
-   stage('Bootstrap Azure Identity') {
+  stage('Bootstrap Azure Identity') {
     steps {
       script {
         def output = sh(
-          script: '''
-            set -e
-            pwsh -File scripts/bootstrap-identity.ps1
-          ''',
+          script: 'pwsh -File scripts/bootstrap-identity.ps1',
           returnStdout: true
         ).trim()
 
-        if (output) {
-          def envList = []
+        echo "Bootstrap output:\n${output}"
 
-          output.split("\n").each { line ->
-            if (line.contains("=")) {
-              envList.add(line)
-            }
-          }
-
-          if (!envList.isEmpty()) {
-            withEnv(envList) {
-              echo "Bootstrap environment variables loaded"
-            }
+        // Convert KEY=VALUE lines into Jenkins env vars
+        output.split('\n').each { line ->
+          if (line.contains('=')) {
+            def (key, value) = line.split('=', 2)
+            env[key.trim()] = value.trim()
           }
         }
+
+        // Hard guard – fail early if missing
+        if (!env.AZ_SUBSCRIPTION_ID) {
+          error "AZ_SUBSCRIPTION_ID was not set by bootstrap script"
+        }
+
+        echo "Bootstrap environment variables loaded"
+        echo "AZ_SUBSCRIPTION_ID=${env.AZ_SUBSCRIPTION_ID}"
       }
     }
   }
+
+
+  //  stage('Bootstrap Azure Identity') {
+  //   steps {
+  //     script {
+  //       def output = sh(
+  //         script: '''
+  //           set -e
+  //           pwsh -File scripts/bootstrap-identity.ps1
+  //         ''',
+  //         returnStdout: true
+  //       ).trim()
+
+  //       if (output) {
+  //         def envList = []
+
+  //         output.split("\n").each { line ->
+  //           if (line.contains("=")) {
+  //             envList.add(line)
+  //           }
+  //         }
+
+  //         if (!envList.isEmpty()) {
+  //           withEnv(envList) {
+  //             echo "Bootstrap environment variables loaded"
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
 
     stage('Prepare version') {
       steps {
