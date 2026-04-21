@@ -40,36 +40,42 @@ pipeline {
       }
     }
 
-  stage('Bootstrap Azure Identity') {
-    steps {
-      script {
-        def output = sh(
-          script: 'pwsh -File scripts/bootstrap-identity.ps1',
-          returnStdout: true
-        ).trim()
+ stage('Bootstrap Azure Identity') {
+  steps {
+    script {
+      def output = sh(
+        script: 'pwsh -File scripts/bootstrap-identity.ps1',
+        returnStdout: true
+      ).trim()
 
-        echo "Bootstrap output:\n${output}"
+      echo "Bootstrap output:\n${output}"
 
-        // Convert KEY=VALUE lines into a list Jenkins understands
-        def envVars = []
-        output.split('\n').each { line ->
-          if (line.contains('=')) {
-            envVars.add(line.trim())
-          }
-        }
-
-        withEnv(envVars) {
-          // Guardrail
-          if (!env.AZ_SUBSCRIPTION_ID) {
-            error "AZ_SUBSCRIPTION_ID was not set by bootstrap script"
-          }
-
-          echo "Bootstrap environment variables loaded"
-          echo "AZ_SUBSCRIPTION_ID=${env.AZ_SUBSCRIPTION_ID}"
+      // Parse output into a map
+      def vars = [:]
+      output.split('\n').each { line ->
+        if (line.contains('=')) {
+          def (k, v) = line.split('=', 2)
+          vars[k.trim()] = v.trim()
         }
       }
+
+      // Explicitly promote to Jenkins env (sandbox-safe)
+      env.AZ_SUBSCRIPTION_ID = vars.AZ_SUBSCRIPTION_ID
+      env.ACR_NAME           = vars.ACR_NAME
+      env.KEYVAULT_NAME      = vars.KEYVAULT_NAME
+      env.AZURE_CLIENT_ID    = vars.AZURE_CLIENT_ID
+      env.AKS_OIDC_ISSUER    = vars.AKS_OIDC_ISSUER
+
+      // Guardrail
+      if (!env.AZ_SUBSCRIPTION_ID) {
+        error "AZ_SUBSCRIPTION_ID was not set by bootstrap script"
+      }
+
+      echo "Bootstrap environment variables persisted"
+      echo "AZ_SUBSCRIPTION_ID=${env.AZ_SUBSCRIPTION_ID}"
     }
   }
+}
 
   //  stage('Bootstrap Azure Identity') {
   //   steps {
