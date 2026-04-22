@@ -41,17 +41,17 @@
     - jcasc
 
 
-- name: AKS post-deploy workload identity refresh
-  hosts: localhost
-  connection: local
-  gather_facts: false
+# - name: AKS post-deploy workload identity refresh
+#   hosts: localhost
+#   connection: local
+#   gather_facts: false
 
-  tasks:
-        - name: Restart myapp deployment to refresh workload identity token
-          command: kubectl rollout restart deployment myapp -n default
+#   tasks:
+#         - name: Restart myapp deployment to refresh workload identity token
+#           command: kubectl rollout restart deployment myapp -n default
 
-        - name: Wait for rollout to complete
-          command: kubectl rollout status deployment myapp -n default
+#         - name: Wait for rollout to complete
+#           command: kubectl rollout status deployment myapp -n default
 
-        - name: Verify pod state
-          command: kubectl get pods -n default
+#         - name: Verify pod state
+#           command: kubectl get pods -n default
