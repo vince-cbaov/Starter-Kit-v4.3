@@ -56,11 +56,3 @@ variable "workload_identity_principal_id" {
   type        = string
   description = "Principal ID of the AKS workload identity."
 }
-
-variable "workload_identity_client_id" {
-  type = string
-}
-
-variable "workload_identity_id" {
-  type = string
-}
