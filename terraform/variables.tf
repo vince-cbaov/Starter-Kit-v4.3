@@ -25,6 +25,7 @@ variable "trusted_cidr" {
 variable "subscription_id" {
   type        = string
   description = "Azure Subscription ID for role assignment scope"
+  default     = null
 }
 
 # ---------------------------
