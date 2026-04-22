@@ -98,8 +98,8 @@ module "kv" {
   name_prefix         = var.name_prefix
 
   workload_identity_principal_id = module.identity.principal_id
-  workload_identity_client_id    = module.identity.client_id
-  workload_identity_id           = module.identity.id
+  
+
 
   create_key_vault = true
 
