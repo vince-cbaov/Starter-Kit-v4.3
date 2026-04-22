@@ -68,7 +68,7 @@ module "identity" {
   resource_group_name = module.rg.name
   location            = module.rg.location
 
-  issuer          = module.aks.oidc_issuer_url
+  aks_oidc_issuer_url = module.aks.oidc_issuer_url
   subject         = "system:serviceaccount:default:myapp-sa"
   subscription_id = data.azurerm_subscription.current.subscription_id
 }
