@@ -73,7 +73,3 @@ output "jenkins_vm_ip" {
   value       = module.compute.jenkins_public_ip
 }
 
-output "workload_identity_client_id" {
-  description = "Client ID of the Azure AD application used for AKS Workload Identity"
-  value       = var.workload_identity_client_id
-}

@@ -69,8 +69,8 @@ module "identity" {
   location            = module.rg.location
 
   aks_oidc_issuer_url = module.aks.oidc_issuer_url
-  subject         = "system:serviceaccount:default:myapp-sa"
-  subscription_id = data.azurerm_subscription.current.subscription_id
+  subject             = "system:serviceaccount:default:myapp-sa"
+  subscription_id     = data.azurerm_subscription.current.subscription_id
 }
 
 # --------------------
@@ -98,7 +98,7 @@ module "kv" {
   name_prefix         = var.name_prefix
 
   workload_identity_principal_id = module.identity.principal_id
-  
+
 
 
   create_key_vault = true

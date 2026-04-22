@@ -4,7 +4,7 @@ resource "local_file" "secretproviderclass" {
   content = templatefile(
     "${path.module}/../k8s/csi/secretproviderclass.yaml.tftpl",
     {
-      client_id = var.workload_identity_client_id
+      client_id = module.identity.uami_client_id
       tenant_id = data.azurerm_client_config.current.tenant_id
     }
   )
