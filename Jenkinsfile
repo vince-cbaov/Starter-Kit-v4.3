@@ -139,12 +139,17 @@ pipeline {
                   echo "Logging into Azure via Managed Identity (tenant-level)"
                   az login --identity --allow-no-subscriptions >/dev/null
 
-                  echo "Logging into ACR using token-based auth"
-                  az acr login --name ${ACR_NAME} --expose-token \
-                    --output json | jq -r .accessToken | \
-                    docker login ${ACR_NAME}.azurecr.io \
-                      --username 00000000-0000-0000-0000-000000000000 \
-                      --password-stdin
+                  echo "Fetching ACR access token"
+                  ACR_TOKEN=\$(az acr login \
+                    --name ${ACR_NAME} \
+                    --expose-token \
+                    --query accessToken \
+                    --output tsv)
+
+                  echo "Logging into Docker using ACR token"
+                  echo "\$ACR_TOKEN" | docker login ${ACR_NAME}.azurecr.io \
+                    --username 00000000-0000-0000-0000-000000000000 \
+                    --password-stdin
 
                   echo "Building image"
                   docker build \
@@ -159,6 +164,7 @@ pipeline {
         }
       }
     }
+
 
     stage('Quality & Security Gates (v2)') {
       when {
