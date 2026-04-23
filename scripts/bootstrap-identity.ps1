@@ -6,18 +6,28 @@ param (
     [string]$AcrName        = "starterkitacr",
     [string]$ServiceAccount = "myapp-sa",
     [string]$Namespace      = "default",
-    [string]$ClientId       = "e5f21f47-6236-455a-af6d-79277ee40d36",
     [string]$UamiName       = "sk-dev2-uami"
 )
 
 $ErrorActionPreference = "Stop"
 
-az login --identity --allow-no-subscriptions
-
+Write-Host "Logging into Azure with managed identity"
+az login --identity --allow-no-subscriptions | Out-Null
 az account set --subscription $SubscriptionId
 
 # -------------------------
-# 1. Get AKS OIDC Issuer
+# 1. Resolve User Assigned Managed Identity
+# -------------------------
+$uami = az identity show `
+  --name $UamiName `
+  --resource-group $ResourceGroup `
+  -o json | ConvertFrom-Json
+
+$UamiPrincipalId = $uami.principalId
+$UamiClientId   = $uami.clientId
+
+# -------------------------
+# 2. Get AKS OIDC Issuer
 # -------------------------
 $OidcIssuer = az aks show `
   --resource-group $ResourceGroup `
@@ -26,66 +36,73 @@ $OidcIssuer = az aks show `
   -o tsv
 
 # -------------------------
-# 2. Create Federation JSON
+# 3. Federated Identity Credential (idempotent)
 # -------------------------
-$federationFile = "$PSScriptRoot\myapp-federation.json"
-
-@"
-{
-  "name": "myapp-sa-federation",
-  "issuer": "$OidcIssuer",
-  "subject": "system:serviceaccount:${Namespace}:${ServiceAccount}",
-  "audiences": ["api://AzureADTokenExchange"]
-}
-"@ | Out-File -Encoding utf8 $federationFile
-
-# -------------------------
-# 3. Create Federated Credential (idempotent)
-# -------------------------
-$federations = az identity federated-credential list `
+$existingFic = az identity federated-credential list `
   --identity-name $UamiName `
   --resource-group $ResourceGroup `
-  --query "[?subject=='system:serviceaccount:${Namespace}:${ServiceAccount}']" `
+  --query "[?subject=='system:serviceaccount:${Namespace}:${ServiceAccount}'].name" `
   -o tsv
 
-if (-not $federations) {
+if (-not $existingFic) {
+    Write-Host "Creating federated identity credential for Workload Identity"
+
     az identity federated-credential create `
       --name "myapp-fic" `
       --identity-name $UamiName `
       --resource-group $ResourceGroup `
-      --parameters $federationFile
+      --issuer $OidcIssuer `
+      --subject "system:serviceaccount:${Namespace}:${ServiceAccount}" `
+      --audiences "api://AzureADTokenExchange"
 }
 
 # -------------------------
-# 4. Assign Key Vault Role
+# 4. Key Vault access for workload identity
 # -------------------------
-$kvScope = az keyvault show `
+$kvId = az keyvault show `
   --name $KeyVaultName `
   --resource-group $ResourceGroup `
   --query id -o tsv
 
 az role assignment create `
-  --assignee $ClientId `
+  --assignee-object-id $UamiPrincipalId `
+  --assignee-principal-type ServicePrincipal `
   --role "Key Vault Secrets User" `
-  --scope $kvScope `
+  --scope $kvId `
   2>$null
 
 # -------------------------
-# 5. Assign ACR Roles
+# 5. ACR RBAC (build + runtime)
 # -------------------------
 $acrId = az acr show `
   --name $AcrName `
   --resource-group $ResourceGroup `
   --query id -o tsv
 
+# Build VM / CI push
 az role assignment create `
-  --assignee $ClientId `
+  --assignee-object-id $UamiPrincipalId `
+  --assignee-principal-type ServicePrincipal `
   --role AcrPush `
   --scope $acrId `
   2>$null
 
+# AKS kubelet pull
+$kubeletObjectId = az aks show `
+  --resource-group $ResourceGroup `
+  --name $AksName `
+  --query identityProfile.kubeletidentity.objectId `
+  -o tsv
+
+az role assignment create `
+  --assignee-object-id $kubeletObjectId `
+  --assignee-principal-type ServicePrincipal `
+  --role AcrPull `
+  --scope $acrId `
+  2>$null
+
 # -------------------------
-# 6. Attach UAMI to VMs (safe to re-run)
+# 6. Attach UAMI to Docker build VM only
 # -------------------------
 az vm identity assign `
   --name sk-dev2-docker `
@@ -93,16 +110,10 @@ az vm identity assign `
   --identities $UamiName `
   2>$null
 
-az vm identity assign `
-  --name sk-dev2-jenkins `
-  --resource-group $ResourceGroup `
-  --identities $UamiName `
-  2>$null
-
 # -------------------------
-# 7. Emit Outputs for Jenkins
+# 7. Emit outputs for Jenkins
 # -------------------------
-Write-Output "AZURE_CLIENT_ID=$ClientId"
+Write-Output "AZURE_CLIENT_ID=$UamiClientId"
 Write-Output "AKS_OIDC_ISSUER=$OidcIssuer"
 Write-Output "KEYVAULT_NAME=$KeyVaultName"
 Write-Output "ACR_NAME=$AcrName"
