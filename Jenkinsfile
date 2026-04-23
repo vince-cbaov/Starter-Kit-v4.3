@@ -137,10 +137,14 @@ pipeline {
                   set -e
 
                   echo "Logging into Azure via Managed Identity (tenant-level)"
-                  az login --identity --allow-no-subscriptions
+                  az login --identity --allow-no-subscriptions >/dev/null
 
-                  echo "Logging into ACR"
-                  az acr login --name ${ACR_NAME}
+                  echo "Logging into ACR using token-based auth"
+                  az acr login --name ${ACR_NAME} --expose-token \
+                    --output json | jq -r .accessToken | \
+                    docker login ${ACR_NAME}.azurecr.io \
+                      --username 00000000-0000-0000-0000-000000000000 \
+                      --password-stdin
 
                   echo "Building image"
                   docker build \
