@@ -119,6 +119,7 @@ pipeline {
       }
     }
 
+    
     stage('Build & Push Image (Docker VM)') {
       steps {
         script {
@@ -134,14 +135,19 @@ pipeline {
               tar -czf - . | ssh -T -o StrictHostKeyChecking=no \
                 ${DOCKER_USER_CLEAN}@${DOCKER_HOST_CLEAN} '
                   set -e
-                  az login --identity --allow-no-subscriptions
-                  az account set --subscription ${env.AZ_SUBSCRIPTION_ID}
+
+                  echo "Logging into Azure via Managed Identity"
+                  az login --identity
+
+                  echo "Logging into ACR"
                   az acr login --name ${ACR_NAME}
 
+                  echo "Building image"
                   docker build \
                     --build-arg APP_VERSION=${IMAGE_TAG} \
                     -t ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG} -
 
+                  echo "Pushing image"
                   docker push ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG}
                 '
             """
@@ -149,7 +155,6 @@ pipeline {
         }
       }
     }
-
 
     stage('Quality & Security Gates (v2)') {
       when {
