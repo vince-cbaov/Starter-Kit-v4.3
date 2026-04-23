@@ -136,8 +136,8 @@ pipeline {
                 ${DOCKER_USER_CLEAN}@${DOCKER_HOST_CLEAN} '
                   set -e
 
-                  echo "Logging into Azure via Managed Identity"
-                  az login --identity
+                  echo "Logging into Azure via Managed Identity (tenant-level)"
+                  az login --identity --allow-no-subscriptions
 
                   echo "Logging into ACR"
                   az acr login --name ${ACR_NAME}
