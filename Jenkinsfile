@@ -119,7 +119,8 @@ pipeline {
       }
     }
 
-    
+    echo "### USING TOKEN-BASED ACR LOGIN VERSION ###"
+
     stage('Build & Push Image (Docker VM)') {
       steps {
         script {
