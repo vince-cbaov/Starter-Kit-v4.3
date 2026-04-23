@@ -21,4 +21,4 @@ azure:
   tenantID: "ec7789f0-7ef2-4ff6-89b1-a74d3fc8f81c"
   keyVaultName: "sk-dev2-kv2"
 workloadIdentity:
-  clientId: "650203b7-2e6a-4f93-8f22-9db3f8bbe059"
+  clientId: "a33702b9-59e2-43cf-bd47-8869ad9261af"
