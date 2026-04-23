@@ -135,28 +135,14 @@ pipeline {
               tar -czf - . | ssh -T -o StrictHostKeyChecking=no \
                 ${DOCKER_USER_CLEAN}@${DOCKER_HOST_CLEAN} '
                   set -e
+                  az login --identity --allow-no-subscriptions
+                  az account set --subscription ${env.AZ_SUBSCRIPTION_ID}
+                  az acr login --name ${ACR_NAME}
 
-                  echo "Logging into Azure via Managed Identity (tenant-level)"
-                  az login --identity --allow-no-subscriptions >/dev/null
-
-                  echo "Fetching ACR access token"
-                  ACR_TOKEN=\$(az acr login \
-                    --name ${ACR_NAME} \
-                    --expose-token \
-                    --query accessToken \
-                    --output tsv)
-
-                  echo "Logging into Docker using ACR token"
-                  echo "\$ACR_TOKEN" | docker login ${ACR_NAME}.azurecr.io \
-                    --username 00000000-0000-0000-0000-000000000000 \
-                    --password-stdin
-
-                  echo "Building image"
                   docker build \
                     --build-arg APP_VERSION=${IMAGE_TAG} \
                     -t ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG} -
 
-                  echo "Pushing image"
                   docker push ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG}
                 '
             """
@@ -164,7 +150,6 @@ pipeline {
         }
       }
     }
-
 
     stage('Quality & Security Gates (v2)') {
       when {
