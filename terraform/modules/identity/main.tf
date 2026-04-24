@@ -19,8 +19,3 @@ resource "azurerm_federated_identity_credential" "myapp_fic" {
   user_assigned_identity_id = azurerm_user_assigned_identity.workload.id
 }
 
-resource "azurerm_role_assignment" "uami_kv_secrets_user" {
-  scope                = module.kv.kv_id
-  role_definition_name = "Key Vault Secrets User"
-  principal_id         = azurerm_user_assigned_identity.workload.principal_id
-}
