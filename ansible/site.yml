@@ -1,6 +1,6 @@
 ---
 - name: Configure all servers
-  hosts: all
+  hosts: jenkins
   become: true
 
   pre_tasks:
@@ -49,4 +49,4 @@
   roles:
     - hardening
     - docker_server
-    - jcasc
+
