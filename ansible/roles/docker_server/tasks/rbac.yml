@@ -1,7 +1,7 @@
 ---
 # -------------------------------------------------
 # Azure RBAC for Docker build VM (system-assigned MI)
-# Runs on Ansible control host (not the VM)
+# Runs on Ansible control host (no sudo)
 # -------------------------------------------------
 
 - name: Ensure system-assigned managed identity is enabled on Docker VM
@@ -11,6 +11,7 @@
     --resource-group {{ docker_vm_rg }}
   delegate_to: localhost
   run_once: true
+  become: false
   changed_when: false
 
 - name: Get Docker VM system-assigned MI principalId
@@ -22,6 +23,7 @@
     --output tsv
   delegate_to: localhost
   run_once: true
+  become: false
   register: docker_vm_principal_id
   changed_when: false
 
@@ -34,6 +36,7 @@
     --output tsv
   delegate_to: localhost
   run_once: true
+  become: false
   register: acr_resource_id
   changed_when: false
 
@@ -45,6 +48,7 @@
     --scope {{ acr_resource_id.stdout }}
   delegate_to: localhost
   run_once: true
+  become: false
   register: acr_role_assignment
   failed_when:
     - acr_role_assignment.rc != 0
