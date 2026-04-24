@@ -1,8 +1,16 @@
+---
+# -------------------------------------------------
+# Azure RBAC for Docker build VM (system-assigned MI)
+# Runs on Ansible control host (not the VM)
+# -------------------------------------------------
+
 - name: Ensure system-assigned managed identity is enabled on Docker VM
   command: >
     az vm identity assign
     --name {{ docker_vm_name }}
     --resource-group {{ docker_vm_rg }}
+  delegate_to: localhost
+  run_once: true
   changed_when: false
 
 - name: Get Docker VM system-assigned MI principalId
@@ -12,6 +20,8 @@
     --resource-group {{ docker_vm_rg }}
     --query principalId
     --output tsv
+  delegate_to: localhost
+  run_once: true
   register: docker_vm_principal_id
   changed_when: false
 
@@ -22,6 +32,8 @@
     --resource-group {{ acr_rg }}
     --query id
     --output tsv
+  delegate_to: localhost
+  run_once: true
   register: acr_resource_id
   changed_when: false
 
@@ -31,6 +43,8 @@
     --assignee {{ docker_vm_principal_id.stdout }}
     --role AcrPush
     --scope {{ acr_resource_id.stdout }}
+  delegate_to: localhost
+  run_once: true
   register: acr_role_assignment
   failed_when:
     - acr_role_assignment.rc != 0

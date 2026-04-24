@@ -5,7 +5,7 @@ jenkins:
 
 unclassified:
   location:
-    url: "http://20.166.25.94:8080/"
+    url: "http://52.236.64.255:8080/"
     adminAddress: "vfalconer@hotmail.co.uk"
 
 credentials:
