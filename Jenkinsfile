@@ -123,7 +123,7 @@ pipeline {
     stage('Build & Push Image (Docker VM)') {
       steps {
         script {
-          echo "### USING TOKEN-BASED ACR LOGIN (FIXED) ###"
+          echo "### USING TOKEN-BASED ACR LOGIN (SYSTEM MI, STREAMED BUILD) ###"
 
           def DOCKER_USER_CLEAN = env.DOCKER_USER.trim()
           def DOCKER_HOST_CLEAN = env.DOCKER_HOST.trim()
@@ -132,11 +132,12 @@ pipeline {
             sh """
               set -e
 
-              ssh -o StrictHostKeyChecking=no \
+              # Stream the Jenkins workspace to the Docker VM over SSH
+              tar -czf - . | ssh -o StrictHostKeyChecking=no \
                 ${DOCKER_USER_CLEAN}@${DOCKER_HOST_CLEAN} <<'EOF'
               set -e
 
-              echo "Logging into Azure via Managed Identity"
+              echo "Logging into Azure via SYSTEM-assigned Managed Identity"
               az login --identity > /dev/null
 
               echo "Setting subscription explicitly"
@@ -163,12 +164,12 @@ pipeline {
                 --username 00000000-0000-0000-0000-000000000000 \
                 --password-stdin
 
-              echo "Building image"
+              echo "Building image from streamed context"
               docker build \
                 --build-arg APP_VERSION=${IMAGE_TAG} \
-                -t ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG} .
+                -t ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG} -
 
-              echo "Pushing image"
+              echo "Pushing image to ACR"
               docker push ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG}
 
               EOF
@@ -177,55 +178,8 @@ pipeline {
         }
       }
     }
-
-
     
-    // stage('Build & Push Image (Docker VM)') {
-    //   steps {
-    //     script {
-    //       echo "### USING TOKEN-BASED ACR LOGIN VERSION ###"
-
-    //       def DOCKER_USER_CLEAN = env.DOCKER_USER.trim()
-    //       def DOCKER_HOST_CLEAN = env.DOCKER_HOST.trim()
-
-    //       echo "DOCKER_USER=[${DOCKER_USER_CLEAN}]"
-    //       echo "DOCKER_HOST=[${DOCKER_HOST_CLEAN}]"
-
-    //       sshagent(credentials: ['docker-server-ssh']) {
-    //         sh """
-    //           set -e
-    //           tar -czf - . | ssh -T -o StrictHostKeyChecking=no \
-    //             ${DOCKER_USER_CLEAN}@${DOCKER_HOST_CLEAN} '
-    //               set -e
-
-    //               echo "Logging into Azure via Managed Identity (tenant-level)"
-    //               az login --identity --allow-no-subscriptions >/dev/null
-
-    //               echo "Fetching ACR access token"
-    //               ACR_TOKEN=\$(az acr login \
-    //                 --name ${ACR_NAME} \
-    //                 --expose-token \
-    //                 --query accessToken \
-    //                 --output tsv)
-
-    //               echo "\$ACR_TOKEN" | docker login ${ACR_NAME}.azurecr.io \
-    //                 --username 00000000-0000-0000-0000-000000000000 \
-    //                 --password-stdin
-
-    //               echo "Building image"
-    //               docker build \
-    //                 --build-arg APP_VERSION=${IMAGE_TAG} \
-    //                 -t ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG} -
-
-    //               echo "Pushing image"
-    //               docker push ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG}
-    //             '
-    //         """
-    //       }
-    //     }
-    //   }
-    // }
-
+  
     stage('Quality & Security Gates (v2)') {
       when {
         expression { env.IMAGE_TAG == 'v2' }
