@@ -119,52 +119,112 @@ pipeline {
       }
     }
 
-    
+
     stage('Build & Push Image (Docker VM)') {
       steps {
         script {
-          echo "### USING TOKEN-BASED ACR LOGIN VERSION ###"
+          echo "### USING TOKEN-BASED ACR LOGIN (FIXED) ###"
 
           def DOCKER_USER_CLEAN = env.DOCKER_USER.trim()
           def DOCKER_HOST_CLEAN = env.DOCKER_HOST.trim()
 
-          echo "DOCKER_USER=[${DOCKER_USER_CLEAN}]"
-          echo "DOCKER_HOST=[${DOCKER_HOST_CLEAN}]"
-
           sshagent(credentials: ['docker-server-ssh']) {
             sh """
               set -e
-              tar -czf - . | ssh -T -o StrictHostKeyChecking=no \
-                ${DOCKER_USER_CLEAN}@${DOCKER_HOST_CLEAN} '
-                  set -e
 
-                  echo "Logging into Azure via Managed Identity (tenant-level)"
-                  az login --identity --allow-no-subscriptions >/dev/null
+              ssh -o StrictHostKeyChecking=no \
+                ${DOCKER_USER_CLEAN}@${DOCKER_HOST_CLEAN} <<'EOF'
+              set -e
 
-                  echo "Fetching ACR access token"
-                  ACR_TOKEN=\$(az acr login \
-                    --name ${ACR_NAME} \
-                    --expose-token \
-                    --query accessToken \
-                    --output tsv)
+              echo "Logging into Azure via Managed Identity"
+              az login --identity > /dev/null
 
-                  echo "\$ACR_TOKEN" | docker login ${ACR_NAME}.azurecr.io \
-                    --username 00000000-0000-0000-0000-000000000000 \
-                    --password-stdin
+              echo "Setting subscription explicitly"
+              az account set --subscription ${AZ_SUBSCRIPTION_ID}
 
-                  echo "Building image"
-                  docker build \
-                    --build-arg APP_VERSION=${IMAGE_TAG} \
-                    -t ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG} -
+              echo "Verifying subscription"
+              ACTIVE_SUB=\$(az account show --query id -o tsv)
+              echo "Active subscription: \$ACTIVE_SUB"
 
-                  echo "Pushing image"
-                  docker push ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG}
-                '
+              if [ "\$ACTIVE_SUB" != "${AZ_SUBSCRIPTION_ID}" ]; then
+                echo "ERROR: Wrong Azure subscription context"
+                exit 1
+              fi
+
+              echo "Fetching ACR access token"
+              ACR_TOKEN=\$(az acr login \
+                --name ${ACR_NAME} \
+                --subscription ${AZ_SUBSCRIPTION_ID} \
+                --expose-token \
+                --query accessToken \
+                --output tsv)
+
+              echo "\$ACR_TOKEN" | docker login ${ACR_NAME}.azurecr.io \
+                --username 00000000-0000-0000-0000-000000000000 \
+                --password-stdin
+
+              echo "Building image"
+              docker build \
+                --build-arg APP_VERSION=${IMAGE_TAG} \
+                -t ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG} .
+
+              echo "Pushing image"
+              docker push ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG}
+
+              EOF
             """
           }
         }
       }
     }
+
+
+    
+    // stage('Build & Push Image (Docker VM)') {
+    //   steps {
+    //     script {
+    //       echo "### USING TOKEN-BASED ACR LOGIN VERSION ###"
+
+    //       def DOCKER_USER_CLEAN = env.DOCKER_USER.trim()
+    //       def DOCKER_HOST_CLEAN = env.DOCKER_HOST.trim()
+
+    //       echo "DOCKER_USER=[${DOCKER_USER_CLEAN}]"
+    //       echo "DOCKER_HOST=[${DOCKER_HOST_CLEAN}]"
+
+    //       sshagent(credentials: ['docker-server-ssh']) {
+    //         sh """
+    //           set -e
+    //           tar -czf - . | ssh -T -o StrictHostKeyChecking=no \
+    //             ${DOCKER_USER_CLEAN}@${DOCKER_HOST_CLEAN} '
+    //               set -e
+
+    //               echo "Logging into Azure via Managed Identity (tenant-level)"
+    //               az login --identity --allow-no-subscriptions >/dev/null
+
+    //               echo "Fetching ACR access token"
+    //               ACR_TOKEN=\$(az acr login \
+    //                 --name ${ACR_NAME} \
+    //                 --expose-token \
+    //                 --query accessToken \
+    //                 --output tsv)
+
+    //               echo "\$ACR_TOKEN" | docker login ${ACR_NAME}.azurecr.io \
+    //                 --username 00000000-0000-0000-0000-000000000000 \
+    //                 --password-stdin
+
+    //               echo "Building image"
+    //               docker build \
+    //                 --build-arg APP_VERSION=${IMAGE_TAG} \
+    //                 -t ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG} -
+
+    //               echo "Pushing image"
+    //               docker push ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG}
+    //             '
+    //         """
+    //       }
+    //     }
+    //   }
+    // }
 
     stage('Quality & Security Gates (v2)') {
       when {
