@@ -1,0 +1,10 @@
+# Docker VM
+docker_vm_name: sk-dev2-docker
+docker_vm_rg: sk-dev2-rg
+
+# ACR
+acr_name: starterkitacr
+acr_rg: sk-dev2-rg
+
+# Subscription (used implicitly by az CLI)
+subscription_id: 6fb1fdac-61ae-423c-bbd9-e4a355f030ec

@@ -1,0 +1,37 @@
+- name: Ensure system-assigned managed identity is enabled on Docker VM
+  command: >
+    az vm identity assign
+    --name {{ docker_vm_name }}
+    --resource-group {{ docker_vm_rg }}
+  changed_when: false
+
+- name: Get Docker VM system-assigned MI principalId
+  command: >
+    az vm identity show
+    --name {{ docker_vm_name }}
+    --resource-group {{ docker_vm_rg }}
+    --query principalId
+    --output tsv
+  register: docker_vm_principal_id
+  changed_when: false
+
+- name: Get ACR resource ID
+  command: >
+    az acr show
+    --name {{ acr_name }}
+    --resource-group {{ acr_rg }}
+    --query id
+    --output tsv
+  register: acr_resource_id
+  changed_when: false
+
+- name: Assign AcrPush role to Docker VM system MI
+  command: >
+    az role assignment create
+    --assignee {{ docker_vm_principal_id.stdout }}
+    --role AcrPush
+    --scope {{ acr_resource_id.stdout }}
+  register: acr_role_assignment
+  failed_when:
+    - acr_role_assignment.rc != 0
+    - "'already exists' not in acr_role_assignment.stderr"
