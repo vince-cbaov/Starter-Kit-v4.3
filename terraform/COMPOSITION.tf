@@ -99,14 +99,25 @@ module "kv" {
 
   workload_identity_principal_id = module.identity.principal_id
 
+  create_key_vault    = true
+  secrets             = var.secrets
+  ssh_private_key     = var.ssh_private_key
+  access_object_ids   = var.access_object_ids
+  rbac_wait_seconds   = 60
+}
 
+# -------------------------------------------------
+# Workload Identity → Key Vault access (RBAC)
+# -------------------------------------------------
+resource "azurerm_role_assignment" "workload_kv_secrets_user" {
+  scope                = module.kv.kv_id
+  role_definition_name = "Key Vault Secrets User"
+  principal_id         = module.identity.principal_id
 
-  create_key_vault = true
-
-  secrets           = var.secrets
-  ssh_private_key   = var.ssh_private_key
-  access_object_ids = var.access_object_ids
-  rbac_wait_seconds = 60
+  depends_on = [
+    module.kv,
+    module.identity
+  ]
 }
 
 # --------------------
