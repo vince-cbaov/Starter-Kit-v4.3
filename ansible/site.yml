@@ -34,13 +34,19 @@
       apt:
         update_cache: yes
 
-- name: Configure Docker build host
+  roles:
+    - hardening
+    - jenkins
+    - jcasc
+
+# ===============================
+# Docker Build Server
+# ===============================
+- name: Configure Docker build server
   hosts: docker_server
   become: true
 
   roles:
     - hardening
     - docker_server
-    - jenkins
     - jcasc
-
