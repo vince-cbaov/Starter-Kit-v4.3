@@ -22,7 +22,7 @@ pipeline {
     IMAGE_NAME = "myapp"
 
     // Docker build VM
-    DOCKER_HOST = "10.10.1.5"
+    DOCKER_HOST = "sk-dev2-docker"
     DOCKER_USER = "vinadmin"
 
     // AKS configuration

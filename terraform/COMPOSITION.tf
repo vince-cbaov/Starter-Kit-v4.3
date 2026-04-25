@@ -99,11 +99,11 @@ module "kv" {
 
   workload_identity_principal_id = module.identity.principal_id
 
-  create_key_vault    = true
-  secrets             = var.secrets
-  ssh_private_key     = var.ssh_private_key
-  access_object_ids   = var.access_object_ids
-  rbac_wait_seconds   = 60
+  create_key_vault  = true
+  secrets           = var.secrets
+  ssh_private_key   = var.ssh_private_key
+  access_object_ids = var.access_object_ids
+  rbac_wait_seconds = 60
 }
 
 
