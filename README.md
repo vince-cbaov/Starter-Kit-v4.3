@@ -1,81 +1,136 @@
-# Starter Kit v4.3 (Runtime‑Input + Docker Server + Branding + Updated Deployment Flow)
 
-This repository contains a complete, production‑style DevOps starter kit that demonstrates the full CI/CD lifecycle on Azure using Terraform, Jenkins, Docker, Helm, AKS, and Azure Key Vault. It also includes two applications:
+# Starter Kit v4.3
+
+**Azure Dev & Production CI/CD with Terraform, Ansible, Jenkins, Docker, Helm, AKS, and Key Vault**
+
+***
+
+## Overview
+
+**Starter Kit v4.3** is a production‑style DevOps reference project demonstrating how to design, provision, and operate **separate Dev and Production environments on Microsoft Azure** using modern CI/CD and Infrastructure‑as‑Code practices.
+
+The repository shows how to:
+
+*   Provision **isolated Dev and Prod environments**
+*   Use **Terraform modules consistently** across environments
+*   Configure infrastructure using **Ansible**
+*   Build container images remotely using **Docker**
+*   Deploy applications to **AKS using Helm**
+*   Secure secrets with **Azure Key Vault (RBAC + CSI)**
+*   Promote application versions safely between environments
+
+The project structure and workflows reflect how real‑world Azure DevOps platforms are typically built and operated.
 
 ***
 
 ## Applications
 
-### 1. **Static CI/CD Web App (deployed by the pipeline)**
+### 1. Static CI/CD Web App (Deployed to AKS)
 
-This application is deployed to AKS via the Jenkins pipeline and supports **versioned deployments (v1 and v2)**.
+This application is containerised and deployed to **AKS** by the Jenkins pipeline.  
+It supports **versioned deployments (v1 and v2)** and can be promoted independently to Dev or Prod.
 
-*   `app/v1/index.html` – v1 homepage
-*   `app/v1/index_apply.html` – v1 Apply & Prove page
-*   `app/v2/index.html` – v2 homepage
-*   `app/v2/index_apply.html` – v2 Apply & Prove page
-*   `app/v2/index_with_logo.html` – v2 branded splash page
-*   `app/v1/devops-logo.png`, `app/v2/devops-logo.png` – shared branding assets
+**Application versions**
 
-The pipeline deploys **either v1 or v2 per run**, based on branch logic or runtime input.
+    app/v1/index.html
+    app/v1/index_apply.html
 
-***
+    app/v2/index.html
+    app/v2/index_apply.html
+    app/v2/index_with_logo.html
 
-### 2. **Flask Portfolio App (local use, not deployed by CI/CD)**
+    app/v1/devops-logo.png
+    app/v2/devops-logo.png
 
-This application is used for **portfolio and EPA evidence only** and is not part of the CI/CD pipeline.
+**Key characteristics**
 
-*   `app/flask-portfolio/app.py`
-*   Templates: `index.html`, `apply.html`
-*   Static assets: `styles.css`, `devops-logo.png`
-
-***
-
-## The Starter Kit Incorporates
-
-*   Full infrastructure deployment using Terraform
-*   VM configuration using Ansible (Docker Server + optional Jenkins)
-*   Application deployment to AKS using Helm
-*   Secure runtime secrets using Azure Key Vault CSI
-*   CI/CD using Jenkins or GitHub Actions (optional)
-*   A structured, EPA‑compliant evidence trail
+*   One version (v1 or v2) is deployed per pipeline run
+*   Version and target environment are controlled by pipeline logic or runtime input
+*   Runs in an **NGINX container**
+*   Deployed using **Helm**
+*   The **same container image** is promoted from Dev to Prod (immutable artifact)
 
 ***
 
-## Folder Structure (High Level)
+### 2. Flask Portfolio App (Local‑Only)
+
+A simple Flask application included for local testing, experimentation, or future extension.
+
+This application:
+
+*   Is **not deployed via CI/CD**
+*   Does not run in AKS
+*   Is intentionally isolated from Dev/Prod pipelines
+
+<!---->
+
+    app/flask-portfolio/
+    ├── app.py
+    ├── templates/
+    │   ├── index.html
+    │   └── apply.html
+    └── static/
+        ├── styles.css
+        └── devops-logo.png
+
+***
+
+## Dev and Prod Environment Model
+
+This project implements **two fully isolated environments**:
+
+| Environment | Purpose                               |
+| ----------- | ------------------------------------- |
+| **Dev**     | Development, testing, experimentation |
+| **Prod**    | Stable, production‑like environment   |
+
+Each environment has:
+
+*   Its own **Resource Group**
+*   Its own **AKS cluster**
+*   Its own **Azure Key Vault**
+*   Independent networking where required
+*   Shared Terraform modules with environment‑specific variables
+
+***
+
+## Repository Structure (High Level)
 
     starter_kit_v4_3/
     │
     ├── terraform/
-    │   ├── main.tf
+    │   ├── envs/
+    │   │   ├── dev/
+    │   │   └── prod/
+    │   ├── modules/
+    │   │   ├── resource_group/
+    │   │   ├── network/
+    │   │   ├── acr/
+    │   │   ├── aks/
+    │   │   ├── monitoring/
+    │   │   ├── key_vault/
+    │   │   └── compute/
     │   ├── providers.tf
     │   ├── variables.tf
     │   ├── outputs.tf
-    │   ├── COMPOSITION.tf
     │   ├── versions.tf
-    │   ├── envs/{dev,prod}/
-    │   └── modules/{resource_group,network,acr,aks,monitoring,key_vault,compute}/
+    │   └── COMPOSITION.tf
     │
     ├── ansible/
     │   ├── inventory/
+    │   │   ├── dev.ini
+    │   │   └── prod.ini
     │   ├── playbooks/
-    │   └── roles/{hardening,docker_server,jenkins,jcasc}/
+    │   └── roles/
+    │       ├── hardening/
+    │       ├── docker_server/
+    │       ├── jenkins/
+    │       └── jcasc/
     │
     ├── app/
-    │   ├── flask-portfolio/
-    │   │   ├── static/{styles.css,devops-logo.png}
-    │   │   ├── templates/{index.html,apply.html}
-    │   │   └── app.py
     │   ├── v1/
-    │   │   ├── index.html
-    │   │   ├── index_apply.html
-    │   │   └── devops-logo.png
     │   ├── v2/
-    │   │   ├── index.html
-    │   │   ├── index_apply.html
-    │   │   ├── index_with_logo.html
-    │   │   └── devops-logo.png
-    │   └── README.txt
+    │   └── flask-portfolio/
     │
     ├── k8s/
     ├── helm/
@@ -87,9 +142,19 @@ This application is used for **portfolio and EPA evidence only** and is not part
 
 ***
 
-## Secrets — Runtime‑Input Model
+## Secret Management and Identity Model
 
-No secrets are stored in the repository. Secrets are supplied at Terraform runtime using environment variables:
+Secrets are **never stored in Git** and are handled differently depending on **where the code is running**.
+
+### Runtime Secret Handling
+
+Secrets are:
+
+1.  Supplied via environment variables at Terraform runtime
+2.  Stored securely in **Azure Key Vault (per environment)**
+3.  Consumed by Jenkins or AKS workloads at runtime
+
+#### Required Runtime Variables
 
 ```bash
 export SP_APP_ID="<GUID>"
@@ -98,51 +163,59 @@ export TENANT_ID="<GUID>"
 export SSH_PUBLIC_KEY="$(cat ~/.ssh/id_ed25519.pub)"
 ```
 
-The Terraform Key Vault module stores these as:
+Key Vault stores values such as:
 
 *   `acr-sp-app-id`
 *   `acr-sp-secret`
 *   `tenant-id`
 *   `acr-name`
 
-These secrets are later consumed by AKS pods using the Key Vault CSI driver or by Jenkins during pipeline execution.
+***
+
+### Identity Usage by Context
+
+This project uses **different Azure identity mechanisms depending on the execution context**, reflecting common real‑world Azure architectures.
+
+#### Jenkins (CI/CD Control Plane)
+
+*   Jenkins runs on a **Virtual Machine**, outside of AKS
+*   Jenkins authenticates to Azure using an **Azure Service Principal**
+*   The Service Principal is stored securely as a Jenkins credential
+*   Used for:
+    *   `az login`
+    *   Azure Container Registry access
+    *   `az aks get-credentials`
+    *   Terraform and Helm operations
+
+#### AKS Workloads (Runtime Plane)
+
+*   Applications running inside AKS use a **User‑Assigned Managed Identity (UAMI)**
+*   Authentication is handled via **Azure Workload Identity (OIDC federation)**
+*   No client secrets or credentials are stored in pods
+*   Used for:
+    *   Azure Key Vault CSI driver
+    *   Secure pod‑to‑Azure resource access
+
+This separation ensures:
+
+*   Secretless authentication for Kubernetes workloads
+*   Appropriate identity usage for CI/CD tooling
+*   Clear separation between infrastructure control and application runtime security
 
 ***
 
-## Provision Infrastructure (dev)
-
-Move to the dev environment:
+## Provisioning the Dev Environment
 
 ```bash
 cd terraform/envs/dev
-```
-
-Initialise backend:
-
-```bash
 terraform init -backend-config=backend.tfvars
+terraform apply -auto-approve
 ```
 
-Deploy infrastructure:
-
-```bash
-terraform apply -auto-approve \
-  -var="location=northeurope" \
-  -var="name_prefix=sk-dev" \
-  -var="admin_username=vinadmin" \
-  -var="acr_name=starterkitacr" \
-  -var="sp_app_id=$SP_APP_ID" \
-  -var="sp_secret=$SP_SECRET" \
-  -var="tenant_id=$TENANT_ID" \
-  -var="ssh_public_key=$SSH_PUBLIC_KEY" \
-  -var="create_vms=true" \
-  -var="enable_docker_vm=true"
-```
-
-This creates:
+### Resources Created
 
 *   Resource Group
-*   Virtual Network, Subnet, NSG
+*   Virtual Network, Subnets, NSGs
 *   Azure Container Registry
 *   Azure Kubernetes Service
 *   Azure Key Vault (RBAC)
@@ -152,63 +225,70 @@ This creates:
 
 ***
 
-## Accessing the VMs and Unlocking Jenkins
+## Provisioning the Prod Environment
 
-Test VM ports:
+```bash
+cd terraform/envs/prod
+terraform init -backend-config=backend.tfvars
+terraform apply -auto-approve
+```
+
+Prod uses the **same Terraform modules** as Dev, with stricter environment‑specific values.
+
+***
+
+## VM Access and Jenkins Setup
 
 ```bash
 nc -vz <docker_ip> 22
 nc -vz <jenkins_ip> 22
-```
-
-SSH:
-
-```bash
 ssh vinadmin@<jenkins_ip>
-```
-
-Retrieve Jenkins unlock password:
-
-```bash
 sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 ```
 
-Open Jenkins:
+Access Jenkins:
 
     http://<jenkins_ip>:8080
 
 ***
 
-## Ansible Server Configuration
-
-Ansible inventories live under `ansible/inventory/`.
-
-To configure the Docker Server and Jenkins:
+## Ansible Configuration (Dev & Prod)
 
 ```bash
 cd ansible
-ansible -i inventory.ini all -m ping
-ansible-playbook -i inventory.ini site.yml
+ansible -i inventory/dev.ini all -m ping
+ansible-playbook -i inventory/dev.ini site.yml
 ```
 
-### Roles Applied
-
-*   Hardening
-*   Docker Server
-*   Jenkins
-*   Jenkins Configuration as Code (JCasC)
+Repeat with `prod.ini` for production.
 
 ***
 
-## Jenkins + Azure Key Vault
+## Jenkins Pipeline
 
-### Required Plugins
+### Pipeline Behaviour
 
-Not included by default:
+The `Jenkinsfile` performs:
+
+1.  Source checkout
+2.  Azure authentication (Service Principal)
+3.  ACR login
+4.  Remote Docker image build on Docker Server VM
+5.  Push image to ACR
+6.  `az aks get-credentials`
+7.  Helm deploy to AKS
+8.  Rollout verification
+
+The pipeline supports **Dev → Prod promotion** using the same immutable image.
+
+***
+
+## Jenkins Requirements
+
+**Plugins**
 
 *   Docker Pipeline
-*   Docker API
-*   Docker Commons
+*   Docker API / Commons
 *   Azure CLI
 *   Azure Credentials
 *   Kubernetes CLI
@@ -216,55 +296,23 @@ Not included by default:
 *   Pipeline: Declarative
 *   Credentials Binding
 
-### Create Service Principal Credential
+***
 
-In Jenkins:
-
-*   ID: `azure-sp`
-*   Type: Secret Text
-*   Paste the full JSON output from:
+## AKS + Azure Key Vault CSI
 
 ```bash
-az ad sp create-for-rbac --sdk-auth
+az aks enable-addons -g <rg> -n <aks> --addons azure-keyvault-secrets-provider
+kubectl apply -f k8s/csi/secretproviderclass-dev.yaml
+kubectl apply -f k8s/csi/secretproviderclass-prod.yaml
 ```
 
-### Pipeline Behaviour
+Secrets mount at:
 
-The Jenkinsfile performs:
-
-1.  Source checkout
-2.  Azure login using Service Principal
-3.  ACR login
-4.  Remote Docker build on the Docker Server VM
-5.  Push image to ACR
-6.  `az aks get-credentials`
-7.  Helm deploy to AKS
-8.  Rollout verification
+    /mnt/secrets
 
 ***
 
-## Static CI/CD App (Deployed to AKS)
-
-The CI/CD app consists of:
-
-    app/v1/index.html
-    app/v1/index_apply.html
-    app/v2/index.html
-    app/v2/index_apply.html
-    app/v2/index_with_logo.html
-    app/*/devops-logo.png
-
-Notes:
-
-*   Only **one version (v1 or v2)** is deployed per pipeline run
-*   `index_with_logo.html` is referenced internally only
-*   Deployment uses an NGINX container defined in Helm
-
-***
-
-## Flask Portfolio App (Local Only)
-
-This app is not part of CI/CD and is intended for local execution only.
+## Running the Flask App Locally
 
 ```bash
 cd app/flask-portfolio
@@ -272,66 +320,46 @@ pip install flask
 python app.py
 ```
 
-Open:
-
-    http://127.0.0.1:5000/
-
-***
-
-## AKS + Azure Key Vault CSI
-
-Enable CSI driver:
-
-```bash
-az aks enable-addons -g <rg> -n <aks> --addons azure-keyvault-secrets-provider
-```
-
-Apply SecretProviderClass:
-
-```bash
-kubectl apply -f k8s/csi/secretproviderclass.yaml
-```
-
-Secrets are mounted in pods at:
-
-    /mnt/secrets
-
 ***
 
 ## Evidence Checklist
 
-Located in `evidence_checklist_v4_3.html`.
+Located in:
+
+    evidence_checklist_v4_3.html
 
 Covers:
 
-*   Terraform deployment
-*   Key Vault secret handling
-*   Jenkins authentication
+*   Terraform infrastructure deployment
+*   Azure Key Vault secret handling
+*   Jenkins authentication and pipeline execution
 *   Remote Docker builds
 *   ACR image push
 *   AKS deployment
-*   v2 quality gates and approvals
+*   Versioned (v2) deployment controls
 
 ***
 
 ## Security Notes
 
-*   Restrict Docker API access to Jenkins VM only
-*   Use TLS (2376) for production Docker
-*   Never store secrets in the repository
-*   Use managed identity with `AcrPull` for AKS → ACR
+*   Dev and Prod environments are isolated
+*   Docker API access restricted to Jenkins VM
+*   No secrets stored in Git or baked into images
+*   AKS uses managed identity with `AcrPull`
+*   Terraform state is environment‑specific
 
 ***
 
-## Support and Extensions
+## Optional Enhancements
 
-Available on request:
-
-*   TLS‑enabled Docker remote API
+*   Approval gates Dev → Prod
 *   AKS Ingress with HTTPS
-*   External Secrets Operator
-*   Monitoring dashboards
-*   Flask deployment to AKS
-*   Multi‑environment pipeline support (dev/prod)
+*   Jenkins → Managed Identity migration
+*   GitHub Actions support
+*   Blue/green or canary deployments
 
 ***
+
+### ✅ Summary
+
+This repository demonstrates a **modern Azure Dev and Production CI/CD platform**, combining Infrastructure as Code, secure identity patterns, and Kubernetes‑native best practices.
